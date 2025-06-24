@@ -1,0 +1,199 @@
+###################
+# Java
+###################
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+###################
+# Maven
+###################
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+###################
+# Spring Boot
+###################
+*.log
+logs/
+spring.log
+application-local.properties
+application-dev.properties
+application-secret.properties
+
+###################
+# Docker
+###################
+**/.docker
+**/Dockerfile.local
+docker-compose.override.yml
+docker-compose.local.yml
+.docker/
+*.dockerignore
+
+###################
+# IDE Files
+###################
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Eclipse
+.project
+.classpath
+.settings/
+bin/
+tmp/
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.recommenders
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+###################
+# Build Tools
+###################
+build/
+gradle/
+gradlew
+gradlew.bat
+.gradle/
+
+###################
+# OS Generated
+###################
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Linux
+*~
+.fuse_hidden*
+.Trash-*
+.nfs*
+
+###################
+# Security & Secrets
+###################
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+*.truststore
+secrets/
+private-keys/
+certificates/
+.env
+.env.local
+.env.*.local
+
+###################
+# Logs & Debug
+###################
+*.log
+logs/
+debug.log
+error.log
+access.log
+application.log
+spring.log
+logback.log
+
+###################
+# Temporary Files
+###################
+*.tmp
+*.temp
+temp/
+tmp/
+.cache/
+.temp/
+
+###################
+# Package Managers
+###################
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+###################
+# Testing
+###################
+test-results/
+test-output/
+coverage/
+.coverage
+*.cover
+.pytest_cache/
+
+###################
+# Documentation
+###################
+# Uncomment if you don't want to track generated docs
+# docs/build/
+# site/
+
+###################
+# Project Specific
+###################
+# ZKP PoC specific ignores
+zkp-keys/
+test-certificates/
+performance-logs/
+benchmark-results/
+
+###################
+# Backup Files
+###################
+*.bak
+*.backup
+*.old
+*~
+
+###################
+# Archive Files
+###################
+*.zip
+*.tar.gz
+*.rar
+*.7z

@@ -6,7 +6,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
-class RessourceApplicationTest {
+class ResourceApplicationTest {
 
     @Test
     void testStart() {

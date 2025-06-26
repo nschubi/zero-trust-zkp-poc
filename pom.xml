@@ -20,7 +20,7 @@
     <modules>
         <module>pep-service</module>
         <module>pdp-service</module>
-        <module>ressource-service</module>
+        <module>resource-service</module>
         <module>client-app</module>
     </modules>
 

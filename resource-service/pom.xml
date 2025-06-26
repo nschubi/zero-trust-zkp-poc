@@ -6,7 +6,7 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>ressource-service</artifactId>
+    <artifactId>resource-service</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>

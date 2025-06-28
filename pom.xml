@@ -22,6 +22,7 @@
         <module>pdp-service</module>
         <module>resource-service</module>
         <module>client-app</module>
+        <module>poc-core</module>
     </modules>
 
     <dependencyManagement>

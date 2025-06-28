@@ -33,7 +33,7 @@ class PersonControllerTest {
 
         ResponseEntity<Person> response = personController.getPerson(1L);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals(person, response.getBody());
     }
 
@@ -43,7 +43,7 @@ class PersonControllerTest {
 
         ResponseEntity<Person> response = personController.getPerson(2L);
 
-        assertEquals(404, response.getStatusCodeValue());
+        assertEquals(404, response.getStatusCode().value());
         assertNull(response.getBody());
     }
 

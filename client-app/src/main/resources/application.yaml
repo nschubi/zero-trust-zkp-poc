@@ -1,2 +1,6 @@
 server:
   port: 8080
+
+service:
+  url:
+    pep: http://localhost:8081

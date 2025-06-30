@@ -1,6 +1,7 @@
 server:
   port: 8081
 
-pdp:
-  service:
-    url: http://localhost:8082
+service:
+  url:
+    pdp: http://localhost:8082
+    resource: http://localhost:8083

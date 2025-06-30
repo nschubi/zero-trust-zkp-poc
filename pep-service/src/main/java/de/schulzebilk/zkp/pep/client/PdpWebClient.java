@@ -13,20 +13,18 @@ public class PdpWebClient {
 
     private final static Logger LOG = LoggerFactory.getLogger(PdpWebClient.class);
 
-    @Value("${pdp.service.url}")
+    @Value("${service.url.pdp}")
     private String pdpServiceUrl;
 
     private WebClient webClient;
 
     @PostConstruct
     public void init() {
-        LOG.info("PdpWebClient instantiated, service URL: {}", pdpServiceUrl);
         webClient = WebClient.create(pdpServiceUrl);
     }
 
     public boolean authenticate(String username, String password) {
         AuthenticationRequest request = new AuthenticationRequest(username, password);
-
         return Boolean.TRUE.equals(webClient
                 .post()
                 .uri("/auth/authenticate")
@@ -35,6 +33,5 @@ public class PdpWebClient {
                 .bodyToMono(Boolean.class)
                 .block());
     }
-
 
 }

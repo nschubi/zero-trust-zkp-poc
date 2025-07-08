@@ -21,7 +21,7 @@ To complete the architecture, the following components are also needed:
 - **Resource Server**: The resource server is the component that ultimately provides the resources to the client. It is registered to the Zero Trust Architecture and therefore protected by the Policy Enforcement Point and can only be accessed through it.
 
 ## Setup
-The project is a Maven project. To run it, you need to have Java 17 and Maven installed. You can run the project with the following command:
+The project is a Maven project. To run it, you need to have Java 21 and Maven installed. You can run the project with the following command:
 ```bash
 mvn clean install
 ```

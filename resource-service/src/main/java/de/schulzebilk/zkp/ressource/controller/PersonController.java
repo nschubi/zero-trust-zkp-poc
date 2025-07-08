@@ -1,6 +1,6 @@
 package de.schulzebilk.zkp.ressource.controller;
 
-import de.schulzebilk.zkp.core.model.resource.Person;
+import de.schulzebilk.zkp.ressource.model.Person;
 import de.schulzebilk.zkp.ressource.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;

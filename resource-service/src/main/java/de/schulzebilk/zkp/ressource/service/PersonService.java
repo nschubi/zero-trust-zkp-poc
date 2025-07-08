@@ -1,38 +1,34 @@
 package de.schulzebilk.zkp.ressource.service;
 
-import de.schulzebilk.zkp.core.model.resource.Person;
+import de.schulzebilk.zkp.ressource.model.Person;
+import de.schulzebilk.zkp.ressource.repository.PersonRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 
 @Service
 public class PersonService {
 
-    private HashMap<Long, Person> people = new HashMap<>();
+    private final PersonRepository personRepository;
 
-    public PersonService() {
-        people.put(1L, new Person(1L, "Alice", "Anderson"));
-        people.put(2L, new Person(2L, "Bob", "Brown"));
-        people.put(3L, new Person(3L, "Charlie", "Clark"));
+    @Autowired
+    public PersonService(PersonRepository personRepository) {
+        this.personRepository = personRepository;
+    }
+
+    public Iterable<Person> findAll() {
+        return personRepository.findAll();
     }
 
     public Person findById(Long id) {
-        return people.get(id);
+        return personRepository.findById(id).orElse(null);
     }
 
     public Person save(Person person) {
-        people.put(person.getId(), person);
-        return person;
+        return personRepository.save(person);
     }
 
     public void deleteById(Long id) {
-        people.remove(id);
-    }
-
-    public List<Person> findAll() {
-        return new ArrayList<>(people.values());
+        personRepository.deleteById(id);
     }
 
 }

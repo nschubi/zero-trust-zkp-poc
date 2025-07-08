@@ -1,6 +1,6 @@
 package de.schulzebilk.zkp.ressource.controller;
 
-import de.schulzebilk.zkp.core.model.resource.Person;
+import de.schulzebilk.zkp.ressource.model.Person;
 import de.schulzebilk.zkp.ressource.service.PersonService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,7 +28,7 @@ class PersonControllerTest {
 
     @Test
     void getPerson_found() {
-        Person person = new Person(1L, "Alice", "Anderson");
+        Person person = new Person("Alice", "Anderson");
         when(personService.findById(1L)).thenReturn(person);
 
         ResponseEntity<Person> response = personController.getPerson(1L);

@@ -1,6 +1,5 @@
 package de.schulzebilk.zkp.client;
 
-import de.schulzebilk.zkp.core.model.resource.Person;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,16 +19,5 @@ public class PepWebClient {
     @PostConstruct
     public void init() {
         webClient = WebClient.create(pepServiceUrl);
-    }
-
-    public Person findPersonById(Long id) {
-        return webClient
-                .get()
-                .uri("/api/resource/person/" + id)
-                        .header("X-Username", "Test")
-                        .header("X-Password", "Test")
-                .retrieve()
-                .bodyToMono(Person.class)
-                .block();
     }
 }

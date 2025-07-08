@@ -4,10 +4,7 @@ import de.schulzebilk.zkp.ressource.model.Person;
 import de.schulzebilk.zkp.ressource.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/person")
@@ -35,6 +32,33 @@ public class PersonController {
         return ResponseEntity.ok(person);
     }
 
+    @PostMapping
+    public ResponseEntity<Person> createPerson(Person person) {
+        Person savedPerson = personService.save(person);
+        return ResponseEntity.ok(savedPerson);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<Person> updatePerson(@PathVariable("id") Long id, @RequestBody Person person) {
+        Person existingPerson = personService.findById(id);
+        if (existingPerson == null) {
+            return ResponseEntity.notFound().build();
+        }
+        existingPerson.setFirstname(person.getFirstname());
+        existingPerson.setLastname(person.getLastname());
+        Person updatedPerson = personService.save(existingPerson);
+        return ResponseEntity.ok(updatedPerson);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePerson(@PathVariable("id") Long id) {
+        Person existingPerson = personService.findById(id);
+        if (existingPerson == null) {
+            return ResponseEntity.notFound().build();
+        }
+        personService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
 
 }
 

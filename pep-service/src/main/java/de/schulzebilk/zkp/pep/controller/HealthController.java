@@ -10,23 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/health")
 public class HealthController {
 
-    private final PolicyService policyService;
-
-    @Autowired
-    public HealthController(PolicyService policyService) {
-        this.policyService = policyService;
-    }
-
     @GetMapping
     public String healthCheck() {
         return "Policy Enforcement Point is running!";
     }
-
-    @GetMapping("/auth")
-    public String authCheck() {
-        boolean isAuthorized = policyService.isAuthorized("testUser", "testPassword");
-        return isAuthorized ? "User is authorized!" : "User is not authorized!";
-    }
-
 
 }

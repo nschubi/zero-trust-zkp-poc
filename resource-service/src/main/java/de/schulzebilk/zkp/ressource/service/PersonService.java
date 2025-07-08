@@ -1,6 +1,6 @@
 package de.schulzebilk.zkp.ressource.service;
 
-import de.schulzebilk.zkp.core.model.Person;
+import de.schulzebilk.zkp.core.model.resource.Person;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public class PersonService {
     }
 
     public Person save(Person person) {
-        people.put(person.id(), person);
+        people.put(person.getId(), person);
         return person;
     }
 

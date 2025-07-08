@@ -1,6 +1,6 @@
 package de.schulzebilk.zkp.ressource.controller;
 
-import de.schulzebilk.zkp.core.model.Person;
+import de.schulzebilk.zkp.core.model.resource.Person;
 import de.schulzebilk.zkp.ressource.service.PersonService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

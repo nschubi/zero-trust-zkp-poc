@@ -1,6 +1,6 @@
 package de.schulzebilk.zkp.client;
 
-import de.schulzebilk.zkp.core.model.Person;
+import de.schulzebilk.zkp.core.model.resource.Person;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

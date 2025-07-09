@@ -13,13 +13,13 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
-public class VerifierService {
+public class FiatShamirVerifierService {
     private final Map<String, Session> activeSessions;
     private final Map<String, Session> sessionsByProver;
     private final Map<String, BigInteger> proverKeys;
     private final BigInteger publicMod;
 
-    public VerifierService() {
+    public FiatShamirVerifierService() {
         this.activeSessions = new ConcurrentHashMap<>();
         this.sessionsByProver = new ConcurrentHashMap<>();
         this.proverKeys = new ConcurrentHashMap<>();

@@ -1,6 +1,5 @@
 package de.schulzebilk.zkp.pep.client;
 
-import de.schulzebilk.zkp.core.model.auth.AuthenticationRequest;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,14 +23,7 @@ public class PdpWebClient {
     }
 
     public boolean authenticate(String username, String password) {
-        AuthenticationRequest request = new AuthenticationRequest(username, password);
-        return Boolean.TRUE.equals(webClient
-                .post()
-                .uri("/auth/authenticate")
-                .bodyValue(request)
-                .retrieve()
-                .bodyToMono(Boolean.class)
-                .block());
+        return true; // TODO: Implement actual authentication logic
     }
 
 }

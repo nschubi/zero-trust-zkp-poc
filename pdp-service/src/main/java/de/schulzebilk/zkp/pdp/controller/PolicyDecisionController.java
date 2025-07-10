@@ -32,8 +32,8 @@ public class PolicyDecisionController {
 
     @PostMapping("/register")
     public ResponseEntity<String> registerProver(@RequestBody RegisterProverDTO registerProverDTO) {
-        fiatShamirVerifierService.registerProver(registerProverDTO.getProverId(), registerProverDTO.getProverKey());
-        String response = "Prover with ID " + registerProverDTO.getProverId() + " registered successfully.";
+        fiatShamirVerifierService.registerProver(registerProverDTO.proverId(), registerProverDTO.proverKey());
+        String response = "Prover with ID " + registerProverDTO.proverId() + " registered successfully.";
         return ResponseEntity.ok(response);
     }
 

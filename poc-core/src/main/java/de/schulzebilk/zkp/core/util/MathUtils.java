@@ -9,7 +9,6 @@ import java.util.Random;
 public class MathUtils {
 
     public static final int BIT_LENGTH = 128;
-    public static final double THRESHOLD = 0.999999;
 
     /**
      * Generates a random BigInteger within the specified range.

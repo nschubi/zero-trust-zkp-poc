@@ -16,17 +16,18 @@ public class Session {
     private final LocalDateTime createdAt;
     private SessionState state;
 
+    private final int threshold;
     private BigInteger proverKey;
     private BigInteger publicMod;
-    private double threshold;
 
-    public Session(String proverId, String target) {
+    public Session(String proverId, String target, int threshold) {
         this.sessionId = UUID.randomUUID().toString();
         this.proverId = proverId;
         this.target = target;
         this.rounds = new ArrayList<>();
         this.createdAt = LocalDateTime.now();
         this.state = SessionState.INITIALIZED;
+        this.threshold = threshold;
     }
 
     public FiatShamirRound getCurrentRound() {
@@ -43,7 +44,7 @@ public class Session {
 
     public void evaluateVerification() {
         var completedRounds = rounds.stream().filter(FiatShamirRound::isVerified).toList().size();
-        if (1 - (Math.pow((double) 1 /2, completedRounds)) > threshold) {
+        if (completedRounds >= threshold) {
             state = SessionState.VERIFIED;
         }
     }
@@ -95,10 +96,6 @@ public class Session {
 
     public void setPublicMod(BigInteger publicMod) {
         this.publicMod = publicMod;
-    }
-
-    public void setThreshold(double threshold) {
-        this.threshold = threshold;
     }
 
     public double getThreshold() {

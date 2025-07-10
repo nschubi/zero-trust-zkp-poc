@@ -13,13 +13,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class FiatShamirUnitTest {
 
+    private final static int TEST_THRESHOLD = 5;
+
     @Test
     void testSuccessfulVerification() {
         FiatShamirVerifierService verifier = new FiatShamirVerifierService();
         String proverId = "prover_test";
         ProverClient prover = new ProverClient(proverId, verifier.getPublicMod(), "secretPassword");
         verifier.registerProver(prover.getProverId(), prover.getProverKey());
-        Session session = verifier.createSession(proverId, "/api/test");
+        Session session = verifier.createSession(proverId, "/api/test", TEST_THRESHOLD);
         session.startNewRound();
 
         BigInteger commitment = prover.generateCommitment(session.getSessionId());
@@ -40,7 +42,7 @@ public class FiatShamirUnitTest {
 
         ProverClient manipulatedProverClient = new ProverClient("prover_test2", verifier.getPublicMod(), "differentPassword");
 
-        Session session = verifier.createSession(proverId, "/api/test");
+        Session session = verifier.createSession(proverId, "/api/test", TEST_THRESHOLD);
         while (session.getState() != SessionState.FAILED && session.getState() != SessionState.VERIFIED) {
             session.startNewRound();
 

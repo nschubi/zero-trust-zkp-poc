@@ -19,7 +19,7 @@ public class FiatShamirUnitTest {
         String proverId = "prover_test";
         ProverClient prover = new ProverClient(proverId, verifier.getPublicMod(), "secretPassword");
         verifier.registerProver(prover.getProverId(), prover.getProverKey());
-        Session session = verifier.createSession(proverId);
+        Session session = verifier.createSession(proverId, "/api/test");
         session.startNewRound();
 
         BigInteger commitment = prover.generateCommitment(session.getSessionId());
@@ -40,7 +40,7 @@ public class FiatShamirUnitTest {
 
         ProverClient manipulatedProverClient = new ProverClient("prover_test2", verifier.getPublicMod(), "differentPassword");
 
-        Session session = verifier.createSession(proverId);
+        Session session = verifier.createSession(proverId, "/api/test");
         while (session.getState() != SessionState.FAILED && session.getState() != SessionState.VERIFIED) {
             session.startNewRound();
 

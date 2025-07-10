@@ -11,6 +11,7 @@ import java.util.UUID;
 public class Session {
     private final String sessionId;
     private final String proverId;
+    private final String target;
     private final List<FiatShamirRound> rounds;
     private final LocalDateTime createdAt;
     private SessionState state;
@@ -19,9 +20,10 @@ public class Session {
     private BigInteger publicMod;
     private double threshold;
 
-    public Session(String proverId) {
+    public Session(String proverId, String target) {
         this.sessionId = UUID.randomUUID().toString();
         this.proverId = proverId;
+        this.target = target;
         this.rounds = new ArrayList<>();
         this.createdAt = LocalDateTime.now();
         this.state = SessionState.INITIALIZED;
@@ -57,6 +59,10 @@ public class Session {
 
     public String getProverId() {
         return proverId;
+    }
+
+    public String getTarget() {
+        return target;
     }
 
     public List<FiatShamirRound> getRounds() {

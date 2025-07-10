@@ -45,8 +45,8 @@ public class FiatShamirVerifierService {
         proverKeys.put(proverId, proverKey);
     }
 
-    public Session createSession(String proverId) {
-        Session session = new Session(proverId);
+    public Session createSession(String proverId, String target) {
+        Session session = new Session(proverId, target);
         session.setProverKey(proverKeys.get(proverId));
         session.setPublicMod(publicMod);
         session.setThreshold(MathUtils.THRESHOLD);

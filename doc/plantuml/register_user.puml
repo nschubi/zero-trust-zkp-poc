@@ -1,0 +1,28 @@
+@startuml
+participant "client-app" as client
+participant "pep-service" as pep
+participant "pdp-service" as pdp
+
+activate client
+client -> pep : GET /auth/mod
+activate pep
+pep -> pdp : GET /mod
+activate pdp
+pdp -> pep : 200 OK\nmodulo m
+deactivate pdp
+pep -> client : 200 OK\nmodulo m
+deactivate pep
+
+note over client : v = s² mod m
+
+client -> pep : POST /auth/register
+activate pep
+pep -> pdp : POST /register
+activate pdp
+pdp -> pep : 201 Created\n{ "status": "success" }
+deactivate pdp
+pep -> client : 201 Created\n{ "status": "success" }
+deactivate pep
+
+deactivate client
+@enduml

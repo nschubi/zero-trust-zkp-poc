@@ -47,6 +47,9 @@ public class FiatShamirVerifierService {
 
     public Session createSession(String proverId, String target, int threshold) {
         Session session = new Session(proverId, target, threshold);
+        if (!proverKeys.containsKey(proverId)) {
+            throw new IllegalArgumentException("Prover with ID " + proverId + " is not registered.");
+        }
         session.setProverKey(proverKeys.get(proverId));
         session.setPublicMod(publicMod);
 
@@ -68,7 +71,7 @@ public class FiatShamirVerifierService {
         boolean challenge = new SecureRandom().nextBoolean();
         currentRound.setChallenge(challenge);
 
-        session.setState(SessionState.CHALLENGE_SENT);
+        session.setState(SessionState.WAITING_FOR_RESPONSE);
 
         return challenge;
     }

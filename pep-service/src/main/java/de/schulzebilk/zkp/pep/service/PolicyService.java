@@ -14,8 +14,4 @@ public class PolicyService {
         this.pdpWebClient = pdpWebClient;
     }
 
-    public Boolean isAuthorized(String username, String password) {
-       return pdpWebClient.authenticate(username, password);
-    }
-
 }

@@ -23,6 +23,6 @@ public class PolicyEngineService {
 
         //TODO check username against database
         //TODO check uri against database
-        return 5;
+        return 20;
     }
 }

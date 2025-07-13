@@ -1,5 +1,6 @@
 package de.schulzebilk.zkp.client.service;
 
+import de.schulzebilk.zkp.client.auth.FiatShamirProver;
 import de.schulzebilk.zkp.client.rest.PepBookClient;
 import de.schulzebilk.zkp.core.model.Book;
 import org.slf4j.Logger;
@@ -18,8 +19,8 @@ public class BookService {
         this.pepBookClient = pepBookClient;
     }
 
-    public Book getBookById(Long id) {
-        var book = pepBookClient.getBookById(id);
+    public Book getBookById(Long id, FiatShamirProver prover) {
+        var book = pepBookClient.getBookById(id, prover);
         LOG.info("Book retrieved: {}", book);
         return book;
 

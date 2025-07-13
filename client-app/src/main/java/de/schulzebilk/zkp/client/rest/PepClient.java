@@ -11,6 +11,8 @@ public abstract class PepClient {
 
     protected RestClient restClient;
 
+
+
     @PostConstruct
     public void init() {
         restClient = RestClient.create(pepServiceUrl);

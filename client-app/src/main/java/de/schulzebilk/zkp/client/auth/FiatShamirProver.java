@@ -4,6 +4,7 @@ import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
 import de.schulzebilk.zkp.core.dto.RegisterProverDTO;
 import de.schulzebilk.zkp.core.util.MathUtils;
 import de.schulzebilk.zkp.core.util.PasswordUtils;
+import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.util.Map;

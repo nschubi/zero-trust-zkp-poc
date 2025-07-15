@@ -2,6 +2,7 @@ package de.schulzebilk.zkp.pep.controller;
 
 import de.schulzebilk.zkp.core.auth.SessionState;
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
+import de.schulzebilk.zkp.core.util.AuthUtils;
 import de.schulzebilk.zkp.pep.client.PdpWebClient;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,10 +13,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api")
@@ -28,6 +30,7 @@ public class ProxyController {
 
     private RestClient restClient;
     private final PdpWebClient pdpWebClient;
+    private final Map<String, String> sessionCache = new ConcurrentHashMap<>();
 
     @Autowired
     public ProxyController(PdpWebClient pdpWebClient) {
@@ -61,15 +64,36 @@ public class ProxyController {
             headers.add("auth-session", authStatus.sessionId());
             headers.add("auth-payload", authStatus.payload());
             headers.add("auth-state", authStatus.sessionState().name());
+            sessionCache.put(authStatus.sessionId(), path);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .headers(httpHeaders -> httpHeaders.addAll(headers))
                     .build();
         }
 
         return restClient.get()
-                .uri(resourceServiceUrl + path)
+                .uri(path)
                 .retrieve()
                 .toEntity(Object.class);
     }
 
+    @PostMapping("/authenticate")
+    public ResponseEntity<?> authenticate(@RequestBody AuthenticationDTO authenticationDTO) {
+        AuthenticationDTO response = pdpWebClient.authenticate(authenticationDTO);
+        if (response.sessionState() == SessionState.VERIFIED) {
+            ResponseEntity<String> body = restClient.get()
+                    .uri(sessionCache.get(authenticationDTO.sessionId()))
+                    .retrieve()
+                    .toEntity(String.class);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .headers(headers -> {
+                                headers.addAll(AuthUtils.createHeadersFromAuthenticationDto(response));
+                                headers.setContentType(body.getHeaders().getContentType());
+                            }
+                    )
+                    .body(body.getBody());
+        }
+        return ResponseEntity.status(HttpStatus.OK)
+                .headers(httpHeaders -> httpHeaders.addAll(AuthUtils.createHeadersFromAuthenticationDto(response)))
+                .build();
+    }
 }

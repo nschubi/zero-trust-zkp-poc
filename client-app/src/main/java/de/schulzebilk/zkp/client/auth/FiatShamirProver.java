@@ -1,47 +1,44 @@
 package de.schulzebilk.zkp.client.auth;
 
+import de.schulzebilk.zkp.client.rest.FiatShamirPepClient;
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
 import de.schulzebilk.zkp.core.dto.RegisterProverDTO;
+import de.schulzebilk.zkp.core.model.User;
 import de.schulzebilk.zkp.core.util.MathUtils;
 import de.schulzebilk.zkp.core.util.PasswordUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+@Component
 public class FiatShamirProver {
     private final BigInteger publicMod;
-    private final BigInteger secret;
-    private final BigInteger proverKey;
-    private final String proverId;
-
     private final Map<String, BigInteger> generatorsBySessionId;
+    private final FiatShamirPepClient pepClient;
 
-    public FiatShamirProver(String proverId, BigInteger publicMod, String password) {
-        this.proverId = proverId;
-        this.publicMod = publicMod;
-        this.secret = PasswordUtils.convertPasswordToBigInteger(password, publicMod);
-        this.proverKey = this.secret.pow(2).mod(publicMod);
+    @Autowired
+    public FiatShamirProver(FiatShamirPepClient pepClient) {
+        this.pepClient = pepClient;
+        this.publicMod = pepClient.getPublicModulus();
         this.generatorsBySessionId = new ConcurrentHashMap<>();
     }
 
-    public RegisterProverDTO getRegisterProverDTO() {
-        return new RegisterProverDTO(proverId, proverKey);
-    }
-
-    public AuthenticationDTO handleAuthentication(AuthenticationDTO auth) {
+    public AuthenticationDTO handleAuthentication(User user, AuthenticationDTO auth) {
         switch (auth.sessionState()) {
             case WAITING_FOR_COMMITMENT -> {
                 BigInteger commitment = generateCommitment(auth.sessionId());
-                return new AuthenticationDTO(proverId, auth.sessionId(), commitment.toString(), auth.sessionState());
+                return new AuthenticationDTO(user.getUsername(), auth.sessionId(), commitment.toString(), auth.sessionState());
             }
             case WAITING_FOR_RESPONSE -> {
                 if (auth.payload() == null) {
                     throw new IllegalArgumentException("No challenge provided in payload for session: " + auth.sessionId());
                 }
-                BigInteger response = generateResponse(auth.sessionId(), Boolean.parseBoolean(auth.payload()));
-                return new AuthenticationDTO(proverId, auth.sessionId(), response.toString(), auth.sessionState());
+                BigInteger response = generateResponse(auth.sessionId(),user.getSecret(), Boolean.parseBoolean(auth.payload()));
+                return new AuthenticationDTO(user.getUsername(), auth.sessionId(), response.toString(), auth.sessionState());
             }
             default ->  throw new IllegalStateException("Unexpected session state: " + auth.sessionState());
         }
@@ -53,21 +50,24 @@ public class FiatShamirProver {
         return generator.pow(2).mod(this.publicMod);
     }
 
-    public BigInteger generateResponse(String sessionId, boolean challenge) {
+    public BigInteger generateResponse(String sessionId, String secret, boolean challenge) {
         if (!generatorsBySessionId.containsKey(sessionId)) {
             throw new IllegalArgumentException("No commitment found for session with ID: " + sessionId);
         }
         if (challenge) {
-            return generatorsBySessionId.get(sessionId).multiply(this.secret).mod(this.publicMod);
+            var secretNumber = PasswordUtils.convertPasswordToBigInteger(secret, this.publicMod);
+            return generatorsBySessionId.get(sessionId).multiply(secretNumber).mod(this.publicMod);
         }
         return generatorsBySessionId.get(sessionId);
     }
 
-    public String getProverId() {
-        return proverId;
+    public BigInteger calculateProverKey(String password) {
+        var secret = PasswordUtils.convertPasswordToBigInteger(password, publicMod);
+        return secret.pow(2).mod(publicMod);
     }
 
-    public BigInteger getProverKey() {
-        return proverKey;
+    public String registerProver(User user) {
+        return pepClient.registerProver(new RegisterProverDTO(user.getUsername(), calculateProverKey(user.getSecret())));
     }
+
 }

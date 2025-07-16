@@ -65,7 +65,7 @@ public class ProxyController {
             headers.add("auth-payload", authStatus.payload());
             headers.add("auth-state", authStatus.sessionState().name());
             sessionCache.put(authStatus.sessionId(), path);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+            return ResponseEntity.status(HttpStatus.OK)
                     .headers(httpHeaders -> httpHeaders.addAll(headers))
                     .build();
         }

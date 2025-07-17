@@ -26,4 +26,10 @@ public class BookService {
         LOG.info("Book retrieved: {}", book);
         return book;
     }
+
+    public Book createBook(Book book, User user) {
+        var createdBook = pepBookClient.createEntity(BOOK_URI, book, user, Book.class);
+        LOG.info("Book created: {}", createdBook);
+        return createdBook;
+    }
 }

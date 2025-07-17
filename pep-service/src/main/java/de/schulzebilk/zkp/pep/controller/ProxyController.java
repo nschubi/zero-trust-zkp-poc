@@ -88,6 +88,7 @@ public class ProxyController {
                     .uri(sessionCache.get(authenticationDTO.sessionId()))
                     .retrieve()
                     .toEntity(String.class);
+
             return ResponseEntity.status(HttpStatus.OK)
                     .headers(headers -> {
                                 headers.addAll(AuthUtils.createHeadersFromAuthenticationDto(response));

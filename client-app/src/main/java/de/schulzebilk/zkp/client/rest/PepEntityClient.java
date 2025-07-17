@@ -21,7 +21,7 @@ public class PepEntityClient<T> extends PepClient {
 
 
     @SuppressWarnings("unchecked")
-    public T getSingleEntityByUri(String uri, User user, Class<?> clazz) {
+    public T getSingleEntityByUri(String uri, User user, Class<T> clazz) {
         ResponseEntity<?> response = restClient.get()
                 .uri(uri)
                 .header("auth-user", user.getUsername())
@@ -45,10 +45,37 @@ public class PepEntityClient<T> extends PepClient {
         }
     }
 
-    private ResponseEntity<?> sendAuthentication(AuthenticationDTO authenticationDTO, Class<?> clazz) {
+    public T createEntity(String uri, T entity, User user, Class<T> clazz) {
+        ResponseEntity<?> response = restClient.post()
+                .uri(uri)
+                .header("auth-user", user.getUsername())
+                .header("auth-payload", user.getSecret())
+                .header("auth-session", user.getAuthType().toString())
+                .body(entity)
+                .retrieve()
+                .toEntity(clazz);
+
+        AuthenticationDTO authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
+        while (authenticate.sessionState() != SessionState.VERIFIED
+                && authenticate.sessionState() != SessionState.FAILED) {
+            authenticate = prover.handleAuthentication(user, authenticate);
+            response = sendAuthentication(authenticate,clazz);
+            authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
+        }
+
+        if (response.getStatusCode().is2xxSuccessful() && authenticate.sessionState() == SessionState.VERIFIED) {
+            return (T) response.getBody();
+        } else {
+            throw new RuntimeException("Failed to retrieve entity from URI: " + uri);
+        }
+    }
+
+    private ResponseEntity<?> sendAuthentication(AuthenticationDTO authenticationDTO, Class<T> clazz) {
         return restClient.post().uri("/api/authenticate")
                 .body(authenticationDTO)
                 .retrieve()
                 .toEntity(clazz);
     }
+
+
 }

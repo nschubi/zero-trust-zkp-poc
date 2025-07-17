@@ -1,6 +1,5 @@
 package de.schulzebilk.zkp.client.service;
 
-import de.schulzebilk.zkp.client.auth.FiatShamirProver;
 import de.schulzebilk.zkp.client.rest.PepEntityClient;
 import de.schulzebilk.zkp.core.model.Book;
 import de.schulzebilk.zkp.core.model.User;

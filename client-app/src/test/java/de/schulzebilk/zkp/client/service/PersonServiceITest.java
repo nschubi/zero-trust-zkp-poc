@@ -1,7 +1,7 @@
 package de.schulzebilk.zkp.client.service;
 
 import de.schulzebilk.zkp.core.auth.AuthType;
-import de.schulzebilk.zkp.core.model.Book;
+import de.schulzebilk.zkp.core.model.Person;
 import de.schulzebilk.zkp.core.model.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,21 +11,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest
-public class BookServiceITest {
+public class PersonServiceITest {
 
     @Autowired
-    private BookService bookService;
+    private PersonService personService;
 
     @Test
-    void testGetBookById() {
+    void testGetPersonById() {
         String proverId = "alice";
         String proverKey = "password123";
         User user = new User(proverId, proverKey, AuthType.FIATSHAMIR);
 
-        Long bookId = 1L;
-        Book book = bookService.getBookById(bookId, user);
+        Long personId = 1L;
+        Person person = personService.getPersonById(personId, user);
 
-        assertNotNull(book);
-        assertEquals(bookId, book.getId());
+        assertNotNull(person);
+        assertEquals(personId, person.getId());
     }
 }

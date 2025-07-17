@@ -1,17 +1,28 @@
 package de.schulzebilk.zkp.pdp.service;
 
+import de.schulzebilk.zkp.core.auth.AuthType;
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
 import de.schulzebilk.zkp.core.auth.SessionState;
+import de.schulzebilk.zkp.core.model.User;
 import de.schulzebilk.zkp.core.util.PasswordUtils;
 import de.schulzebilk.zkp.pdp.model.Session;
+import jakarta.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.math.BigInteger;
+import java.util.Objects;
 
 @Service
 public class PolicyAdministratorService {
 
+    private final static Logger LOG = LoggerFactory.getLogger(PolicyAdministratorService.class);
     private final FiatShamirVerifierService fiatShamirVerifierService;
     private final PolicyEngineService policyEngineService;
 
@@ -19,6 +30,36 @@ public class PolicyAdministratorService {
     public PolicyAdministratorService(FiatShamirVerifierService fiatShamirVerifierService, PolicyEngineService policyEngineService) {
         this.fiatShamirVerifierService = fiatShamirVerifierService;
         this.policyEngineService = policyEngineService;
+    }
+
+    @PostConstruct
+    public void init() {
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(
+                        Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream("users.csv"))))) {
+            String line = br.readLine();
+            var publicMod = fiatShamirVerifierService.getPublicMod();
+            while ((line = br.readLine()) != null) {
+                String[] fields = line.split(";");
+                User user = new User(fields[0], fields[1], AuthType.valueOf(fields[2]));
+                switch (user.getAuthType()) {
+                    case FIATSHAMIR -> {
+                        if (user.getSecret() == null || user.getSecret().isEmpty()) {
+                            throw new IllegalArgumentException("Secret must not be null or empty for Fiat-Shamir authentication. User: " + user.getUsername());
+                        }
+                        BigInteger secret = PasswordUtils.convertPasswordToBigInteger(user.getSecret(), publicMod);
+                        var proverKey = secret.pow(2).mod(publicMod);
+                        registerUser(user.getUsername(), proverKey.toString(), user.getAuthType());
+                    }
+                    case PASSWORD -> {
+                        LOG.error("Password authentication is not supported in this service. User: {}", user.getUsername());
+                    }
+                    default -> throw new IllegalArgumentException("Unknown authentication type: " + user.getAuthType());
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public AuthenticationDTO handleAuthentication(AuthenticationDTO auth) {
@@ -33,7 +74,7 @@ public class PolicyAdministratorService {
                 }
             }
             Session newSession = fiatShamirVerifierService.createSession(auth.proverId(), auth.payload(),
-                    policyEngineService.trustAlgorithm(auth.proverId(), auth.payload()));
+                    policyEngineService.trustAlgorithm(auth.proverId(), auth.payload(), HttpMethod.GET));
             newSession.startNewRound();
             return new AuthenticationDTO(newSession.getProverId(), newSession.getSessionId(), null, newSession.getState());
         }
@@ -70,6 +111,23 @@ public class PolicyAdministratorService {
             }
             default -> {
                 throw new IllegalArgumentException("Invalid session state: " + auth.sessionState());
+            }
+        }
+    }
+
+    public void registerUser(String userId, String secret, AuthType authType) {
+        if (userId == null || userId.isEmpty() || secret == null || secret.isEmpty()) {
+            throw new IllegalArgumentException("User ID and secret must not be null or empty. User ID: " + userId);
+        }
+        if (authType == null) {
+            throw new IllegalArgumentException("Authentication type must not be null.");
+        }
+        switch (authType) {
+            case FIATSHAMIR -> {
+                fiatShamirVerifierService.registerProver(userId, new BigInteger(secret));
+            }
+            default -> {
+                throw new IllegalArgumentException("Unknown authentication type: " + authType);
             }
         }
     }

@@ -1,0 +1,3 @@
+endpoint;security;description
+book;5;Allows access to book resources
+person;10;Allows access to person resources

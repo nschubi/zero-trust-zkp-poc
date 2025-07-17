@@ -2,6 +2,8 @@ package de.schulzebilk.zkp.pdp.service;
 
 import de.schulzebilk.zkp.core.auth.SessionState;
 import de.schulzebilk.zkp.core.util.MathUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import de.schulzebilk.zkp.pdp.model.FiatShamirRound;
 import de.schulzebilk.zkp.pdp.model.Session;
@@ -14,6 +16,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class FiatShamirVerifierService {
+
+    private final static Logger LOG = LoggerFactory.getLogger(FiatShamirVerifierService.class);
+
     private final Map<String, Session> activeSessions;
     private final Map<String, Session> sessionsByProver;
     private final Map<String, BigInteger> proverKeys;
@@ -42,6 +47,7 @@ public class FiatShamirVerifierService {
         if (proverKeys.containsKey(proverId)) {
             throw new IllegalArgumentException("Prover with ID " + proverId + " is already registered.");
         }
+        LOG.info("Registering prover with ID: {}", proverId);
         proverKeys.put(proverId, proverKey);
     }
 

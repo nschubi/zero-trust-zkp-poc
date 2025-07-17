@@ -22,11 +22,9 @@ public class BookServiceITest {
 
     @Test
     void testGetBookById() {
-        String proverId = "prover_test";
-        String proverKey = "testPassword";
+        String proverId = "alice";
+        String proverKey = "password123";
         User user = new User(proverId, proverKey, AuthType.FIATSHAMIR);
-
-//        prover.registerProver(user);
 
         Long bookId = 1L;
         Book book = bookService.getBookById(bookId, user);

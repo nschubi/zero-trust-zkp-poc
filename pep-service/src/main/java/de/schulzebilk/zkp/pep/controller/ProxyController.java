@@ -16,6 +16,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -44,16 +46,18 @@ public class ProxyController {
 
     @GetMapping("/resource/**")
     public ResponseEntity<?> proxyGet(HttpServletRequest request) {
-        String path = request.getRequestURI().substring("/api".length());
+        String requestUri = request.getRequestURI().substring("/api".length());
+        Path path = Paths.get(requestUri);
+        String endpoint = path.getName(1).toString();
         String user = request.getHeader("auth-user");
         String payload = request.getHeader("auth-payload");
         LOG.info("User: {}, Payload: {}", user, payload);
-        LOG.info("Proxying GET request to resource service: {}", path);
+        LOG.info("Proxying GET request to resource service: {}", endpoint);
 
         AuthenticationDTO authenticationDTO = new AuthenticationDTO(
                 user,
                 null,
-                payload,
+                endpoint,
                 null
         );
         AuthenticationDTO authStatus = pdpWebClient.authenticate(authenticationDTO);
@@ -64,14 +68,14 @@ public class ProxyController {
             headers.add("auth-session", authStatus.sessionId());
             headers.add("auth-payload", authStatus.payload());
             headers.add("auth-state", authStatus.sessionState().name());
-            sessionCache.put(authStatus.sessionId(), path);
+            sessionCache.put(authStatus.sessionId(), requestUri);
             return ResponseEntity.status(HttpStatus.OK)
                     .headers(httpHeaders -> httpHeaders.addAll(headers))
                     .build();
         }
 
         return restClient.get()
-                .uri(path)
+                .uri(requestUri)
                 .retrieve()
                 .toEntity(Object.class);
     }

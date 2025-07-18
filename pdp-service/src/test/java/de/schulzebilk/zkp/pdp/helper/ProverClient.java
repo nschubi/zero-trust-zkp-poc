@@ -1,8 +1,7 @@
 package de.schulzebilk.zkp.pdp.helper;
 
-import de.schulzebilk.zkp.core.auth.SessionState;
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
-import de.schulzebilk.zkp.core.dto.RegisterProverDTO;
+import de.schulzebilk.zkp.core.dto.UserDTO;
 import de.schulzebilk.zkp.core.util.MathUtils;
 import de.schulzebilk.zkp.core.util.PasswordUtils;
 
@@ -24,10 +23,6 @@ public class ProverClient {
         this.secret = PasswordUtils.convertPasswordToBigInteger(password, publicMod);
         this.proverKey = this.secret.pow(2).mod(publicMod);
         this.generatorsBySessionId = new ConcurrentHashMap<>();
-    }
-
-    public RegisterProverDTO getRegisterProverDTO() {
-        return new RegisterProverDTO(proverId, proverKey);
     }
 
     public AuthenticationDTO handleAuthentication(AuthenticationDTO auth) {

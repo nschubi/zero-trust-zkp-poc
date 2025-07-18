@@ -1,14 +1,14 @@
 package de.schulzebilk.zkp.client.auth;
 
 import de.schulzebilk.zkp.client.rest.FiatShamirPepClient;
+import de.schulzebilk.zkp.core.auth.AuthType;
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
-import de.schulzebilk.zkp.core.dto.RegisterProverDTO;
+import de.schulzebilk.zkp.core.dto.UserDTO;
 import de.schulzebilk.zkp.core.model.User;
 import de.schulzebilk.zkp.core.util.MathUtils;
 import de.schulzebilk.zkp.core.util.PasswordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 import java.util.Map;
@@ -67,7 +67,7 @@ public class FiatShamirProver {
     }
 
     public String registerProver(User user) {
-        return pepClient.registerProver(new RegisterProverDTO(user.getUsername(), calculateProverKey(user.getSecret())));
+        return pepClient.registerProver(new UserDTO(user.getUsername(), calculateProverKey(user.getSecret()).toString(), AuthType.FIATSHAMIR));
     }
 
 }

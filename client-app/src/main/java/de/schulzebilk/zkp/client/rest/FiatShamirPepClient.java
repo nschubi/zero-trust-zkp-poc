@@ -1,6 +1,6 @@
 package de.schulzebilk.zkp.client.rest;
 
-import de.schulzebilk.zkp.core.dto.RegisterProverDTO;
+import de.schulzebilk.zkp.core.dto.UserDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -17,9 +17,9 @@ public class FiatShamirPepClient extends PepClient {
                 .body(BigInteger.class);
     }
 
-    public String registerProver(RegisterProverDTO registerProverDTO) {
+    public String registerProver(UserDTO userDTO) {
         return restClient.post().uri("/auth/register")
-                .body(registerProverDTO)
+                .body(userDTO)
                 .retrieve()
                 .body(String.class);
     }

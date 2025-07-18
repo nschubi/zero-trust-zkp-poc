@@ -3,7 +3,7 @@ package de.schulzebilk.zkp.pep.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
 import de.schulzebilk.zkp.core.dto.InitialAuthenticationDTO;
-import de.schulzebilk.zkp.core.dto.RegisterProverDTO;
+import de.schulzebilk.zkp.core.dto.UserDTO;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,9 +34,9 @@ public class PdpWebClient {
                 .body(BigInteger.class);
     }
 
-    public String registerProver(RegisterProverDTO registerProverDTO) {
+    public String registerProver(UserDTO userDTO) {
         return restClient.post().uri("/register")
-                .body(registerProverDTO)
+                .body(userDTO)
                 .retrieve()
                 .body(String.class);
     }

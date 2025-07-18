@@ -25,11 +25,15 @@ public class PolicyAdministratorService {
 
     private final static Logger LOG = LoggerFactory.getLogger(PolicyAdministratorService.class);
     private final FiatShamirVerifierService fiatShamirVerifierService;
+    private final PasswordService passwordService;
     private final PolicyEngineService policyEngineService;
 
     @Autowired
-    public PolicyAdministratorService(FiatShamirVerifierService fiatShamirVerifierService, PolicyEngineService policyEngineService) {
+    public PolicyAdministratorService(FiatShamirVerifierService fiatShamirVerifierService,
+                                      PasswordService passwordService,
+                                      PolicyEngineService policyEngineService) {
         this.fiatShamirVerifierService = fiatShamirVerifierService;
+        this.passwordService = passwordService;
         this.policyEngineService = policyEngineService;
     }
 
@@ -53,7 +57,11 @@ public class PolicyAdministratorService {
                         registerUser(user.getUsername(), proverKey.toString(), user.getAuthType());
                     }
                     case PASSWORD -> {
-                        LOG.error("Password authentication is not supported in this service. User: {}", user.getUsername());
+                        if (user.getSecret() == null || user.getSecret().isEmpty()) {
+                            throw new IllegalArgumentException("Password must not be null or empty for password authentication. User: " + user.getUsername());
+                        }
+                        var hash = PasswordUtils.calcualteHash(user.getSecret());
+                        registerUser(user.getUsername(), hash, user.getAuthType());
                     }
                     default -> throw new IllegalArgumentException("Unknown authentication type: " + user.getAuthType());
                 }
@@ -68,8 +76,8 @@ public class PolicyAdministratorService {
         var authType = AuthType.valueOf(auth.sessionId());
         switch(authType) {
             case FIATSHAMIR -> {
-                if (auth.proverId() == null || auth.payload() == null) {
-                    throw new IllegalArgumentException("Prover ID and payload must not be null. Provider ID: " + auth.proverId() + ", Payload: " + auth.payload());
+                if (auth.proverId() == null) {
+                    throw new IllegalArgumentException("Prover ID must not be null for Fiat-Shamir authentication.");
                 }
                 if (auth.sessionId() != null) {
                     Session existingSession = fiatShamirVerifierService.getSession(auth.sessionId());
@@ -77,12 +85,20 @@ public class PolicyAdministratorService {
                         throw new IllegalArgumentException("Session ID already exists: " + auth.sessionId());
                     }
                 }
-                Session newSession = fiatShamirVerifierService.createSession(auth.proverId(), auth.payload(),
+                Session newSession = fiatShamirVerifierService.createSession(auth.proverId(), initialAuth.endpoint(),
                         policyEngineService.trustAlgorithm(auth.proverId(), initialAuth.endpoint(),
                                 HttpMethod.valueOf(initialAuth.method())));
                 newSession.startNewRound();
                 return new AuthenticationDTO(newSession.getProverId(), newSession.getSessionId(), null, newSession.getState());
             }
+            case PASSWORD ->{
+                boolean isAuthenticated = passwordService.authenticateUser(auth.proverId(),auth.payload());
+                if (!isAuthenticated) {
+                    throw new IllegalArgumentException("Authentication failed for user: " + auth.proverId());
+                }
+                return new AuthenticationDTO(auth.proverId(), null, null, SessionState.VERIFIED);
+            }
+
             default -> {
                 throw new IllegalArgumentException("Unknown authentication type: " + authType);
             }
@@ -139,10 +155,16 @@ public class PolicyAdministratorService {
             case FIATSHAMIR -> {
                 fiatShamirVerifierService.registerProver(userId, new BigInteger(secret));
             }
+            case PASSWORD -> {
+                passwordService.registerUser(userId, secret);
+            }
             default -> {
                 throw new IllegalArgumentException("Unknown authentication type: " + authType);
             }
         }
     }
 
+    public BigInteger getPublicMod() {
+        return fiatShamirVerifierService.getPublicMod();
+    }
 }

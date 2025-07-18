@@ -1,7 +1,7 @@
 package de.schulzebilk.zkp.pep.controller;
 
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
-import de.schulzebilk.zkp.core.dto.RegisterProverDTO;
+import de.schulzebilk.zkp.core.dto.UserDTO;
 import de.schulzebilk.zkp.pep.client.PdpWebClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +27,8 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerProver(@RequestBody RegisterProverDTO registerProverDTO) {
-        String response = pdpWebClient.registerProver(registerProverDTO);
+    public ResponseEntity<String> registerProver(@RequestBody UserDTO userDTO) {
+        String response = pdpWebClient.registerProver(userDTO);
         return ResponseEntity.ok(response);
     }
 

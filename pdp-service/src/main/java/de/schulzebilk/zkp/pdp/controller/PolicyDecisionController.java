@@ -2,7 +2,7 @@ package de.schulzebilk.zkp.pdp.controller;
 
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
 import de.schulzebilk.zkp.core.dto.InitialAuthenticationDTO;
-import de.schulzebilk.zkp.core.dto.RegisterProverDTO;
+import de.schulzebilk.zkp.core.dto.UserDTO;
 import de.schulzebilk.zkp.pdp.service.FiatShamirVerifierService;
 import de.schulzebilk.zkp.pdp.service.PolicyAdministratorService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,24 +18,22 @@ import java.math.BigInteger;
 public class PolicyDecisionController {
 
     private final PolicyAdministratorService policyAdministratorService;
-    private final FiatShamirVerifierService fiatShamirVerifierService;
 
     @Autowired
     public PolicyDecisionController(PolicyAdministratorService policyAdministratorService, FiatShamirVerifierService fiatShamirVerifierService) {
         this.policyAdministratorService = policyAdministratorService;
-        this.fiatShamirVerifierService = fiatShamirVerifierService;
     }
 
     @GetMapping("/mod")
     public ResponseEntity<BigInteger> getPublicModulus() {
-        BigInteger publicModulus = fiatShamirVerifierService.getPublicMod();
+        BigInteger publicModulus = policyAdministratorService.getPublicMod();
         return ResponseEntity.ok(publicModulus);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> registerProver(@RequestBody RegisterProverDTO registerProverDTO) {
-        fiatShamirVerifierService.registerProver(registerProverDTO.proverId(), registerProverDTO.proverKey());
-        String response = "Prover with ID " + registerProverDTO.proverId() + " registered successfully.";
+    public ResponseEntity<String> registerUser(@RequestBody UserDTO userDTO) {
+        policyAdministratorService.registerUser(userDTO.userId(), userDTO.secret(), userDTO.authType());
+        String response = "User with ID " + userDTO.userId() + " registered successfully.";
         return ResponseEntity.ok(response);
     }
 

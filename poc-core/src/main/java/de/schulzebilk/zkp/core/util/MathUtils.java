@@ -8,12 +8,12 @@ import java.util.Random;
 
 public class MathUtils {
 
-    public static final int BIT_LENGTH = 128;
+    public static final int BIT_LENGTH = 2048;
 
     /**
      * Generates a random BigInteger within the specified range.
-     *
-     * Source: https://stackoverflow.com/questions/2290057/how-to-generate-a-random-biginteger-value-in-java
+     * <p>
+     * <a href="https://stackoverflow.com/questions/2290057/how-to-generate-a-random-biginteger-value-in-java">Source</a>
      *
      * @param rangeStart The start of the range (inclusive).
      * @param rangeEnd   The end of the range (inclusive).

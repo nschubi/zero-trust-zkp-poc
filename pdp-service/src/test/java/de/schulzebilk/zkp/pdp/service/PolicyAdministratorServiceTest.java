@@ -2,6 +2,7 @@ package de.schulzebilk.zkp.pdp.service;
 
 import de.schulzebilk.zkp.core.auth.SessionState;
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
+import de.schulzebilk.zkp.core.dto.InitialAuthenticationDTO;
 import de.schulzebilk.zkp.pdp.helper.ProverClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,9 @@ class PolicyAdministratorServiceTest {
         fiatShamirVerifierService.registerProver(proverClient.getProverId(), proverClient.getProverKey());
 
         // Initial Message
-        AuthenticationDTO auth = new AuthenticationDTO("prover_test", null, "resource/book/1", null);
-        AuthenticationDTO response = policyAdministratorService.handleAuthentication(auth);
+        AuthenticationDTO auth = new AuthenticationDTO("prover_test", "FIATSHAMIR", null, null);
+        InitialAuthenticationDTO initAuth = new InitialAuthenticationDTO(auth, "GET", "book");
+        AuthenticationDTO response = policyAdministratorService.initiateAuthentication(initAuth);
 
         while(response.sessionState() != SessionState.VERIFIED && response.sessionState() != SessionState.FAILED) {
             System.out.println("Verifier: " + response);

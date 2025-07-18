@@ -2,6 +2,8 @@ package de.schulzebilk.zkp.ressource.controller;
 
 import de.schulzebilk.zkp.ressource.model.Book;
 import de.schulzebilk.zkp.ressource.service.BookService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/book")
 public class BookController {
 
+    private final static Logger LOG = LoggerFactory.getLogger(BookController.class);
     private final BookService bookService;
 
     @Autowired
@@ -35,6 +38,7 @@ public class BookController {
     @PostMapping
     public ResponseEntity<Book> createBook(@RequestBody Book book) {
         var savedBook = bookService.save(book);
+        LOG.info("Book created: {}", savedBook);
         return ResponseEntity.ok(savedBook);
     }
 

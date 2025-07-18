@@ -13,7 +13,7 @@ public class BookService {
 
     private final static Logger LOG = LoggerFactory.getLogger(BookService.class);
     private final PepEntityClient<Book> pepBookClient;
-    private final String BOOK_URI = "/api/resource/book/";
+    private final String BOOK_URI = "/api/resource/book";
 
     @Autowired
     public BookService(PepEntityClient<Book> pepBookClient) {
@@ -21,7 +21,7 @@ public class BookService {
     }
 
     public Book getBookById(Long id, User user) {
-        var uri = BOOK_URI + id;
+        var uri = BOOK_URI + "/" + id;
         var book = pepBookClient.getSingleEntityByUri(uri, user, Book.class);
         LOG.info("Book retrieved: {}", book);
         return book;

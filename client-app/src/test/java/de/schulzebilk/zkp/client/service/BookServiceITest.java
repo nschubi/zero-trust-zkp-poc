@@ -28,4 +28,20 @@ public class BookServiceITest {
         assertNotNull(book);
         assertEquals(bookId, book.getId());
     }
+
+
+    @Test
+    void testCreateBook() {
+        String proverId = "alice";
+        String proverKey = "password123";
+        User user = new User(proverId, proverKey, AuthType.FIATSHAMIR);
+
+        Book book = new Book("Testbook", "Test Author", 2025);
+
+        Book createdBook = bookService.createBook(book, user);
+
+        assertNotNull(createdBook);
+        System.out.println("Created Book: " + createdBook);
+    }
+
 }

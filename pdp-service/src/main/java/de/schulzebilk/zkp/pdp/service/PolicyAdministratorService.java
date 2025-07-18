@@ -1,8 +1,9 @@
 package de.schulzebilk.zkp.pdp.service;
 
 import de.schulzebilk.zkp.core.auth.AuthType;
-import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
 import de.schulzebilk.zkp.core.auth.SessionState;
+import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
+import de.schulzebilk.zkp.core.dto.InitialAuthenticationDTO;
 import de.schulzebilk.zkp.core.model.User;
 import de.schulzebilk.zkp.core.util.PasswordUtils;
 import de.schulzebilk.zkp.pdp.model.Session;
@@ -62,23 +63,35 @@ public class PolicyAdministratorService {
         }
     }
 
-    public AuthenticationDTO handleAuthentication(AuthenticationDTO auth) {
-        if (auth.sessionState() == null) {
-            if (auth.proverId() == null || auth.payload() == null) {
-                throw new IllegalArgumentException("Prover ID and payload must not be null. Provider ID: " + auth.proverId() + ", Payload: " + auth.payload());
-            }
-            if (auth.sessionId() != null) {
-                Session existingSession = fiatShamirVerifierService.getSession(auth.sessionId());
-                if (existingSession != null) {
-                    throw new IllegalArgumentException("Session ID already exists: " + auth.sessionId());
+    public AuthenticationDTO initiateAuthentication(InitialAuthenticationDTO initialAuth) {
+        var auth = initialAuth.authenticationDTO();
+        var authType = AuthType.valueOf(auth.sessionId());
+        switch(authType) {
+            case FIATSHAMIR -> {
+                if (auth.proverId() == null || auth.payload() == null) {
+                    throw new IllegalArgumentException("Prover ID and payload must not be null. Provider ID: " + auth.proverId() + ", Payload: " + auth.payload());
                 }
+                if (auth.sessionId() != null) {
+                    Session existingSession = fiatShamirVerifierService.getSession(auth.sessionId());
+                    if (existingSession != null) {
+                        throw new IllegalArgumentException("Session ID already exists: " + auth.sessionId());
+                    }
+                }
+                Session newSession = fiatShamirVerifierService.createSession(auth.proverId(), auth.payload(),
+                        policyEngineService.trustAlgorithm(auth.proverId(), initialAuth.endpoint(),
+                                HttpMethod.valueOf(initialAuth.method())));
+                newSession.startNewRound();
+                return new AuthenticationDTO(newSession.getProverId(), newSession.getSessionId(), null, newSession.getState());
             }
-            Session newSession = fiatShamirVerifierService.createSession(auth.proverId(), auth.payload(),
-                    policyEngineService.trustAlgorithm(auth.proverId(), auth.payload(), HttpMethod.GET));
-            newSession.startNewRound();
-            return new AuthenticationDTO(newSession.getProverId(), newSession.getSessionId(), null, newSession.getState());
+            default -> {
+                throw new IllegalArgumentException("Unknown authentication type: " + authType);
+            }
         }
 
+    }
+
+
+    public AuthenticationDTO handleAuthentication(AuthenticationDTO auth) {
         Session session = fiatShamirVerifierService.getSession(auth.sessionId());
         if (session == null) {
             throw new IllegalArgumentException("Session not found for ID: " + auth.sessionId());

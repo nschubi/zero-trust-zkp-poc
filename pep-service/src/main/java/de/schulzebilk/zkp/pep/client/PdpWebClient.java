@@ -1,6 +1,8 @@
 package de.schulzebilk.zkp.pep.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
+import de.schulzebilk.zkp.core.dto.InitialAuthenticationDTO;
 import de.schulzebilk.zkp.core.dto.RegisterProverDTO;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -37,6 +39,20 @@ public class PdpWebClient {
                 .body(registerProverDTO)
                 .retrieve()
                 .body(String.class);
+    }
+
+    public AuthenticationDTO initiateAuthentication(InitialAuthenticationDTO authenticationDTO) {
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String json = mapper.writeValueAsString(authenticationDTO);
+            System.out.println("Sending JSON: " + json);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return restClient.post().uri("/initiate")
+                .body(authenticationDTO)
+                .retrieve()
+                .body(AuthenticationDTO.class);
     }
 
     public AuthenticationDTO authenticate(AuthenticationDTO authenticationDTO) {

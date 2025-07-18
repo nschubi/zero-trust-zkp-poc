@@ -1,6 +1,7 @@
 package de.schulzebilk.zkp.pdp.controller;
 
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
+import de.schulzebilk.zkp.core.dto.InitialAuthenticationDTO;
 import de.schulzebilk.zkp.core.dto.RegisterProverDTO;
 import de.schulzebilk.zkp.pdp.service.FiatShamirVerifierService;
 import de.schulzebilk.zkp.pdp.service.PolicyAdministratorService;
@@ -37,6 +38,13 @@ public class PolicyDecisionController {
         String response = "Prover with ID " + registerProverDTO.proverId() + " registered successfully.";
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/initiate")
+    public ResponseEntity<AuthenticationDTO> initiate(@RequestBody InitialAuthenticationDTO initialAuthenticationDTO){
+        AuthenticationDTO response = policyAdministratorService.initiateAuthentication(initialAuthenticationDTO);
+        return ResponseEntity.ok(response);
+    }
+
 
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationDTO> authenticate(@RequestBody AuthenticationDTO authenticationDTO){

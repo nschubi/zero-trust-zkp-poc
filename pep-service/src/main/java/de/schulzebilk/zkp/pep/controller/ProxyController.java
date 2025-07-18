@@ -2,6 +2,7 @@ package de.schulzebilk.zkp.pep.controller;
 
 import de.schulzebilk.zkp.core.auth.SessionState;
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
+import de.schulzebilk.zkp.core.dto.InitialAuthenticationDTO;
 import de.schulzebilk.zkp.core.util.AuthUtils;
 import de.schulzebilk.zkp.pep.client.PdpWebClient;
 import jakarta.annotation.PostConstruct;
@@ -49,18 +50,27 @@ public class ProxyController {
         String requestUri = request.getRequestURI().substring("/api".length());
         Path path = Paths.get(requestUri);
         String endpoint = path.getName(1).toString();
+
         String user = request.getHeader("auth-user");
+        String session = request.getHeader("auth-session");
         String payload = request.getHeader("auth-payload");
+        String state = request.getHeader("auth-state");
+
         LOG.info("User: {}, Payload: {}", user, payload);
         LOG.info("Proxying GET request to resource service: {}", endpoint);
 
+
         AuthenticationDTO authenticationDTO = new AuthenticationDTO(
                 user,
-                null,
-                endpoint,
-                null
+                session,
+                payload,
+                state == null ? null :
+                SessionState.valueOf(state)
         );
-        AuthenticationDTO authStatus = pdpWebClient.authenticate(authenticationDTO);
+        InitialAuthenticationDTO initialAuth = new InitialAuthenticationDTO(authenticationDTO,
+                request.getMethod(), endpoint);
+        LOG.info("Initial authentication DTO: {}", initialAuth);
+        AuthenticationDTO authStatus = pdpWebClient.initiateAuthentication(initialAuth);
         if (!authStatus.sessionState().equals(SessionState.VERIFIED)) {
             LOG.warn("Authentication failed for user: {}", user);
             HttpHeaders headers = new HttpHeaders();

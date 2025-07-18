@@ -5,7 +5,7 @@ Proof of Concept for my bachelor's thesis. Integration of a zero knowledge proof
 The following protocols should be implemented and tested:
 - [x] Fiat-Shamir
 - [ ] Fiat-Shamir as non-interactive through transformation
-- [ ] Password
+- [x] Password
 
 Open Problems:
 - [ ] Send 401 Unauthorized to client if authentication fails and handle it in the client

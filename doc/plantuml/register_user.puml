@@ -8,9 +8,9 @@ client -> pep : GET /auth/mod
 activate pep
 pep -> pdp : GET /mod
 activate pdp
-pdp -> pep : 200 OK\nmodulo m
+pdp --> pep : 200 OK\nmodulo m
 deactivate pdp
-pep -> client : 200 OK\nmodulo m
+pep --> client : 200 OK\nmodulo m
 deactivate pep
 
 note over client : v = s² mod m
@@ -20,9 +20,9 @@ client -> pep : POST /auth/register\nUserDTO
 activate pep
 pep -> pdp : POST /register\nUserDTO
 activate pdp
-pdp -> pep : 200 OK
+pdp --> pep : 200 OK
 deactivate pdp
-pep -> client : 200 OK
+pep --> client : 200 OK
 deactivate pep
 
 deactivate client

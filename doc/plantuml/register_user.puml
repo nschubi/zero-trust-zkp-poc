@@ -15,13 +15,14 @@ deactivate pep
 
 note over client : v = s² mod m
 
-client -> pep : POST /auth/register
+client -> pep : POST /auth/register\nUserDTO
+'\n{\n  "username": "alice",\n  "secret": "1234567890"\n}
 activate pep
-pep -> pdp : POST /register
+pep -> pdp : POST /register\nUserDTO
 activate pdp
-pdp -> pep : 201 Created\n{ "status": "success" }
+pdp -> pep : 200 OK
 deactivate pdp
-pep -> client : 201 Created\n{ "status": "success" }
+pep -> client : 200 OK
 deactivate pep
 
 deactivate client

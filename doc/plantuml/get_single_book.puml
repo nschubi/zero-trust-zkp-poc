@@ -1,53 +1,50 @@
 @startuml
+actor Nutzer as User
 participant "client-app" as client
 participant "pep-service" as pep
 participant "pdp-service" as pdp
 participant "resource-service" as resource
 
+activate User
+User -> client : Zeig mir das Buch mit der ID 1
 activate client
+client --> User: Aufforderung zur Authentifizierung
+User -> client : Authentifizierungsdaten
 
-client -> pep : GET /api/resource/book/1\nAuthData: Commitment
+client -> pep : GET /api/resource/book/1\nAuthenticationDTO
 activate pep
-''TODO Which Method does the pep use to access the pdp? Always GET?
-pep -> pdp : GET /book/1\nAuthData: Commitment
+pep -> pdp : POST /initiate\nInitialAuthDTO
 activate pdp
-pdp -> pdp: PE: determine n
-alt n=-1
-    pdp -> pep : 403 Forbidden\nStatus: n=-1
+pdp -> pdp: bewerte Authentifizierungsdaten\nermittle Anzahl Runden n
+pdp -> pdp: eröffne neue Session
+loop n times
+    pdp --> pep : 200 OK\nWarte auf Commitment
     deactivate pdp
-    pep -> client : 403 Forbidden\nStatus: n=-1
+    pep --> client: 200 OK\nWarte auf Commitment
     deactivate pep
-else n>=0
-    loop n times
-        activate pdp
-        pdp -> pdp: check Auth
-        pdp -> pep: 401 Unauthorized\nStatus: Challenge
-        activate pep
-        deactivate pdp
-        pep -> client: 401 Unauthorized\nStatus: Challenge
-        deactivate pep
-        client -> pep: GET /api/resource/book/1\nAuthData: Response
-        activate pep
-        pep -> pdp: GET /book/1\nAuthData: Response
-        activate pdp
-        pdp -> pdp: verify Response
-        pdp -> pep: 401 Unauthorized\nStatus: Complete
-        deactivate pdp
-        pep -> client: 401 Unauthorized\nStatus: Complete
-        deactivate pep
-        client -> pep: GET /api/resource/book/1\nAuthData: Commitment
-        activate pep
-        pep -> pdp: GET /book/1\nAuthData: Commitment
-        deactivate pep
-    end
-    pdp -> pep: 200 OK\nStatus: Verified
+    client -> pep: POST /api/authenticate\nCommitment
     activate pep
-    pep -> resource: GET /book/1
-    activate resource
-    resource -> pep: 200 OK\nBook Data
-    deactivate resource
-    pep -> client: 200 OK\nBook Data
+    pep -> pdp: POST /authenticate\nCommitment
+    activate pdp
+    pdp -> pdp: speichere Commitment zur Runde
+    pdp --> pep: 200 OK\nChallenge
+    deactivate pdp
+    pep --> client: 200 OK\nChallenge
     deactivate pep
+    client -> pep: POST /api/authenticate\nResponse
+    activate pep
+    pep -> pdp: POST /authenticate\nResponse
+    activate pdp
+    pdp -> pdp: verifiziere Response
 end
+pdp --> pep: 200 OK\nStatus: Verified
+deactivate pdp
+pep -> resource: GET /book/1
+activate resource
+resource --> pep: 200 OK\nBook{"id": 1,...}
+deactivate resource
+pep --> client: 200 OK\nBook{"id": 1,...}
+deactivate pep
+client --> User: Book{"id": 1,...}
 deactivate client
 @enduml

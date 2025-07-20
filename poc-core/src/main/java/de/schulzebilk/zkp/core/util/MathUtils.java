@@ -8,7 +8,9 @@ import java.util.Random;
 
 public class MathUtils {
 
-    public static final int BIT_LENGTH = 2048;
+    //1660 bits max value
+    //1500 bits is sufficient
+    public static final int BIT_LENGTH = 1500;
 
     /**
      * Generates a random BigInteger within the specified range.
@@ -22,21 +24,22 @@ public class MathUtils {
     public static BigInteger getRandomBigInteger(BigInteger rangeStart, BigInteger rangeEnd){
         Random rand = new SecureRandom();
         int scale = rangeEnd.toString().length();
-        String generated = "";
+        StringBuilder generated = new StringBuilder();
         for(int i = 0; i < rangeEnd.toString().length(); i++){
-            generated += rand.nextInt(10);
+            generated.append(rand.nextInt(10));
         }
         BigDecimal inputRangeStart = new BigDecimal("0").setScale(scale, RoundingMode.FLOOR);
         BigDecimal inputRangeEnd = new BigDecimal(String.format("%0" + (rangeEnd.toString().length()) +  "d", 0).replace('0', '9')).setScale(scale, RoundingMode.FLOOR);
         BigDecimal outputRangeStart = new BigDecimal(rangeStart).setScale(scale, RoundingMode.FLOOR);
         BigDecimal outputRangeEnd = new BigDecimal(rangeEnd).add(new BigDecimal("1")).setScale(scale, RoundingMode.FLOOR);
 
-        BigDecimal bd1 = new BigDecimal(new BigInteger(generated)).setScale(scale, RoundingMode.FLOOR).subtract(inputRangeStart);
+        BigDecimal bd1 = new BigDecimal(new BigInteger(generated.toString())).setScale(scale, RoundingMode.FLOOR).subtract(inputRangeStart);
         BigDecimal bd2 = inputRangeEnd.subtract(inputRangeStart);
         BigDecimal bd3 = bd1.divide(bd2, RoundingMode.FLOOR);
         BigDecimal bd4 = outputRangeEnd.subtract(outputRangeStart);
         BigDecimal bd5 = bd3.multiply(bd4);
         BigDecimal bd6 = bd5.add(outputRangeStart);
+
 
         BigInteger returnInteger = bd6.setScale(0, RoundingMode.FLOOR).toBigInteger();
         returnInteger = (returnInteger.compareTo(rangeEnd) > 0 ? rangeEnd : returnInteger);

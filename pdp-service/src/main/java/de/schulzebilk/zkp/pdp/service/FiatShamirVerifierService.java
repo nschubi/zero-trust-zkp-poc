@@ -32,8 +32,8 @@ public class FiatShamirVerifierService {
         BigInteger p;
         BigInteger mod = BigInteger.ZERO;
         while (mod.equals(BigInteger.ZERO)) {
-            q = new BigInteger(MathUtils.BIT_LENGTH, new SecureRandom());
-            p = new BigInteger(MathUtils.BIT_LENGTH, new SecureRandom());
+            q = new BigInteger(MathUtils.BIT_LENGTH, 100, new SecureRandom());
+            p = new BigInteger(MathUtils.BIT_LENGTH, 100, new SecureRandom());
             mod = q.multiply(p);
         }
         this.publicMod = mod;
@@ -52,12 +52,10 @@ public class FiatShamirVerifierService {
     }
 
     public Session createSession(String proverId, String target, int threshold) {
-        Session session = new Session(proverId, target, threshold);
         if (!proverKeys.containsKey(proverId)) {
             throw new IllegalArgumentException("Prover with ID " + proverId + " is not registered.");
         }
-        session.setProverKey(proverKeys.get(proverId));
-        session.setPublicMod(publicMod);
+        Session session = new Session(proverId, target, threshold, proverKeys.get(proverId), publicMod);
 
         activeSessions.put(session.getSessionId(), session);
         sessionsByProver.put(proverId, session);

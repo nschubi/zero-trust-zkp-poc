@@ -17,10 +17,10 @@ public class Session {
     private SessionState state;
 
     private final int threshold;
-    private BigInteger proverKey;
-    private BigInteger publicMod;
+    private final BigInteger proverKey;
+    private final BigInteger publicMod;
 
-    public Session(String proverId, String target, int threshold) {
+    public Session(String proverId, String target, int threshold, BigInteger proverKey, BigInteger publicMod) {
         this.sessionId = UUID.randomUUID().toString();
         this.proverId = proverId;
         this.target = target;
@@ -28,6 +28,8 @@ public class Session {
         this.createdAt = LocalDateTime.now();
         this.state = SessionState.INITIALIZED;
         this.threshold = threshold;
+        this.proverKey = proverKey;
+        this.publicMod = publicMod;
     }
 
     public FiatShamirRound getCurrentRound() {
@@ -86,16 +88,8 @@ public class Session {
         return proverKey;
     }
 
-    public void setProverKey(BigInteger proverKey) {
-        this.proverKey = proverKey;
-    }
-
     public BigInteger getPublicMod() {
         return publicMod;
-    }
-
-    public void setPublicMod(BigInteger publicMod) {
-        this.publicMod = publicMod;
     }
 
     public double getThreshold() {

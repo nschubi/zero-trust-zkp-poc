@@ -28,8 +28,3 @@ The project is a Maven project. To run it, you need to have Java 21 and Maven in
 ```bash
 mvn clean install
 ```
-This will build the project and run the tests. To run the application, you can use the following command:
-```bash
-mvn spring-boot:run
-```
-

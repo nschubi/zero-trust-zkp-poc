@@ -26,7 +26,7 @@ public class PepEntityClient<T> extends PepClient {
         ResponseEntity<?> response = restClient.get()
                 .uri(uri)
                 .header("auth-user", user.getUsername())
-                .header("auth-payload", getSecretForUser(user) == null ? "" : getSecretForUser(user))
+                .header("auth-payload", getSecretForUser(user))
                 .header("auth-session", user.getAuthType().toString())
                 .retrieve()
                 .toEntity(clazz);
@@ -85,7 +85,7 @@ public class PepEntityClient<T> extends PepClient {
     private String getSecretForUser(User user) {
         switch (user.getAuthType()) {
             case FIATSHAMIR -> {
-                return null;
+                return "";
             }
             case PASSWORD -> {
                 return PasswordUtils.calcualteHash(user.getSecret());

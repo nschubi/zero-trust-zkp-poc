@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-public class FiatShamirProverITest {
+public class FiatShamirProverIT {
 
     @Autowired
     private FiatShamirProver prover;
@@ -18,7 +18,6 @@ public class FiatShamirProverITest {
         String proverKey = "testPassword";
         User user = new User(proverId, proverKey, AuthType.FIATSHAMIR);
 
-        // Register the prover
         String registerResponse = prover.registerProver(user);
         System.out.println("Register Response: " + registerResponse);
 

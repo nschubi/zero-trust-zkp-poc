@@ -39,7 +39,6 @@ public class FiatShamirSignatureProver {
 
         for (int i = 0; i < signature.responses().length; i++) {
             BigInteger res = signature.responses()[i].pow(2).mod(prover.getPublicMod());
-            System.out.println("Checking response " + i + ": " + res + " against commitment " + signature.commitments()[i] + " with challenge " + challenges[i]);
             if (challenges[i]) {
                 BigInteger reserg = signature.commitments()[i].multiply(prover.calculateProverKey(secret)).mod(prover.getPublicMod());
                 if (!res.equals(reserg)) {

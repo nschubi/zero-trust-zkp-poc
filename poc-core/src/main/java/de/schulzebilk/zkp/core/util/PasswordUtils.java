@@ -7,6 +7,18 @@ import java.security.NoSuchAlgorithmException;
 
 public class PasswordUtils {
 
+    private static final String HASH_ALGORITHM = "SHA-256";
+
+    public static byte[] calculateHash(String message) {
+        MessageDigest sha256 = null;
+        try {
+            sha256 = MessageDigest.getInstance(HASH_ALGORITHM);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        return sha256.digest(message.getBytes(StandardCharsets.UTF_8));
+    }
+
     public static BigInteger convertToBigInteger(String s) {
         if (s == null || s.isEmpty()) {
             throw new IllegalArgumentException("Input string cannot be null or empty");
@@ -19,25 +31,13 @@ public class PasswordUtils {
     }
 
     public static BigInteger convertPasswordToBigInteger(String password, BigInteger mod)  {
-        MessageDigest sha256 = null;
-        try {
-            sha256 = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-        byte[] hash = sha256.digest(password.getBytes(StandardCharsets.UTF_8));
+        byte[] hash = calculateHash(password);
         BigInteger hashInt = new BigInteger(1, hash);
         return hashInt.mod(mod);
     }
 
-    public static String calcualteHash(String password) {
-        MessageDigest sha256 = null;
-        try {
-            sha256 = MessageDigest.getInstance("SHA-256");
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-        byte[] hash = sha256.digest(password.getBytes(StandardCharsets.UTF_8));
+    public static String calcualtePasswordHash(String password) {
+        byte[] hash = calculateHash(password);
         StringBuilder hexString = new StringBuilder();
         for (byte b : hash) {
             String hex = Integer.toHexString(0xff & b);

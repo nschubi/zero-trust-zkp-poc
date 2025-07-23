@@ -60,7 +60,7 @@ public class PolicyAdministratorService {
                         if (user.getSecret() == null || user.getSecret().isEmpty()) {
                             throw new IllegalArgumentException("Password must not be null or empty for password authentication. User: " + user.getUsername());
                         }
-                        var hash = PasswordUtils.calcualteHash(user.getSecret());
+                        var hash = PasswordUtils.calcualtePasswordHash(user.getSecret());
                         registerUser(user.getUsername(), hash, user.getAuthType());
                     }
                     default -> throw new IllegalArgumentException("Unknown authentication type: " + user.getAuthType());

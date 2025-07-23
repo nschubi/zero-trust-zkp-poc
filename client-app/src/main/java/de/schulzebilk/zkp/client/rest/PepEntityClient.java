@@ -88,7 +88,7 @@ public class PepEntityClient<T> extends PepClient {
                 return "";
             }
             case PASSWORD -> {
-                return PasswordUtils.calcualteHash(user.getSecret());
+                return PasswordUtils.calcualtePasswordHash(user.getSecret());
             }
             default -> {
                 throw new IllegalArgumentException("Unknown authentication type: " + user.getAuthType());

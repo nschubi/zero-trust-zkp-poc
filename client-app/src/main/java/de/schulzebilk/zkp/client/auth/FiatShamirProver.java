@@ -70,4 +70,7 @@ public class FiatShamirProver {
         return pepClient.registerProver(new UserDTO(user.getUsername(), calculateProverKey(user.getSecret()).toString(), AuthType.FIATSHAMIR));
     }
 
+    public BigInteger getPublicMod() {
+        return publicMod;
+    }
 }

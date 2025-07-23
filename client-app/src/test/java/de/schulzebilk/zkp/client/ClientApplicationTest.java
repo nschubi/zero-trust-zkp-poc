@@ -18,7 +18,7 @@ class ClientApplicationTest {
 
     @Test
     void testStart() {
-        when(fiatShamirPepClient.getPublicModulus()).thenReturn(BigInteger.valueOf(50000));
+        when(fiatShamirPepClient.getPublicModulus()).thenReturn(BigInteger.valueOf(2892418973L));
         assertTrue(true);
     }
 

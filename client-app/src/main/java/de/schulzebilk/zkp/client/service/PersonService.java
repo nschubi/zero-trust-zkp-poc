@@ -13,7 +13,7 @@ public class PersonService {
 
     private final static Logger LOG = LoggerFactory.getLogger(PersonService.class);
     private final PepEntityClient<Person> pepPersonClient;
-    private final String PERSON_URI = "/api/resource/person/";
+    private final String PERSON_URI = "/api/resource/person";
 
     @Autowired
     public PersonService(PepEntityClient<Person> pepPersonClient) {
@@ -21,9 +21,15 @@ public class PersonService {
     }
 
     public Person getPersonById(Long id, User user) {
-        var uri = PERSON_URI + id;
+        var uri = PERSON_URI + "/" + id;
         var person = pepPersonClient.getSingleEntityByUri(uri, user, Person.class);
         LOG.info("Person retrieved: {}", person);
         return person;
+    }
+
+    public Person createPerson(Person person, User user) {
+        var createdPerson = pepPersonClient.createEntity(PERSON_URI, person, user, Person.class);
+        LOG.info("Person created: {}", createdPerson);
+        return createdPerson;
     }
 }

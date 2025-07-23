@@ -75,19 +75,44 @@ public class PepEntityClient<T> extends PepClient {
                 .retrieve()
                 .toEntity(clazz);
 
-        AuthenticationDTO authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
-        while (authenticate.sessionState() != SessionState.VERIFIED
-                && authenticate.sessionState() != SessionState.FAILED) {
-            authenticate = prover.handleAuthentication(user, authenticate);
-            response = sendAuthentication(authenticate, clazz);
-            authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
-        }
+        if (response.getHeaders().containsKey("auth-state")) {
+            AuthenticationDTO authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
+            if(user.getAuthType().equals(AuthType.SIGNATURE)){
+                int rounds = Integer.parseInt(authenticate.payload());
+                Signature signature = signatureProver.generateSignature(authenticate.sessionId(), user, rounds);
+                authenticate = new AuthenticationDTO(authenticate.proverId(), authenticate.sessionId(), "", authenticate.sessionState());
+                response = sendAuthentication(authenticate, signature, clazz);
+                authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
+            }
+            else {
+                while (authenticate.sessionState() != SessionState.VERIFIED
+                        && authenticate.sessionState() != SessionState.FAILED) {
+                    authenticate = prover.handleAuthentication(user, authenticate);
+                    response = sendAuthentication(authenticate, clazz);
+                    authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
+                }
+            }
+            if (response.getStatusCode().is2xxSuccessful() && authenticate.sessionState() == SessionState.VERIFIED) {
+                return (T) response.getBody();
+            } else {
+                throw new RuntimeException("Failed to retrieve entity from URI: " + uri);
+            }
 
-        if (response.getStatusCode().is2xxSuccessful() && authenticate.sessionState() == SessionState.VERIFIED) {
-            return (T) response.getBody();
-        } else {
-            throw new RuntimeException("Failed to retrieve entity from URI: " + uri);
         }
+        return (T) response.getBody();
+//        AuthenticationDTO authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
+//        while (authenticate.sessionState() != SessionState.VERIFIED
+//                && authenticate.sessionState() != SessionState.FAILED) {
+//            authenticate = prover.handleAuthentication(user, authenticate);
+//            response = sendAuthentication(authenticate, clazz);
+//            authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
+//        }
+//
+//        if (response.getStatusCode().is2xxSuccessful() && authenticate.sessionState() == SessionState.VERIFIED) {
+//            return (T) response.getBody();
+//        } else {
+//            throw new RuntimeException("Failed to retrieve entity from URI: " + uri);
+//        }
     }
 
     private ResponseEntity<?> sendAuthentication(AuthenticationDTO authenticationDTO, Class<T> clazz) {

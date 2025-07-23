@@ -3,6 +3,8 @@ package de.schulzebilk.zkp.pep.client;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
 import de.schulzebilk.zkp.core.dto.InitialAuthenticationDTO;
+import de.schulzebilk.zkp.core.dto.SignatureAuthDTO;
+import de.schulzebilk.zkp.core.model.Signature;
 import de.schulzebilk.zkp.core.dto.UserDTO;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -58,6 +60,13 @@ public class PdpWebClient {
     public AuthenticationDTO authenticate(AuthenticationDTO authenticationDTO) {
         return restClient.post().uri("/authenticate")
                 .body(authenticationDTO)
+                .retrieve()
+                .body(AuthenticationDTO.class);
+    }
+
+    public AuthenticationDTO authenticateSignature(SignatureAuthDTO signatureAuthDTO) {
+        return restClient.post().uri("/signature")
+                .body(signatureAuthDTO)
                 .retrieve()
                 .body(AuthenticationDTO.class);
     }

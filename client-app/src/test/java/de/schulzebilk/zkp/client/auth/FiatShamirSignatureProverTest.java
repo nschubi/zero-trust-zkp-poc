@@ -2,7 +2,7 @@ package de.schulzebilk.zkp.client.auth;
 
 import de.schulzebilk.zkp.client.rest.FiatShamirPepClient;
 import de.schulzebilk.zkp.core.auth.AuthType;
-import de.schulzebilk.zkp.core.dto.SignatureDTO;
+import de.schulzebilk.zkp.core.model.Signature;
 import de.schulzebilk.zkp.core.model.User;
 import de.schulzebilk.zkp.core.util.PasswordUtils;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ public class FiatShamirSignatureProverTest {
         int rounds = 5;
 
         when(fiatShamirProver.calculateProverKey(user.getSecret())).thenReturn(calculateProverKey(user.getSecret()));
-        SignatureDTO signature = signatureProver.generateSignature(sessionId, user, rounds);
+        Signature signature = signatureProver.generateSignature(sessionId, user, rounds);
 
         assertNotNull(signature);
         assertEquals(user.getUsername() + sessionId, signature.message());

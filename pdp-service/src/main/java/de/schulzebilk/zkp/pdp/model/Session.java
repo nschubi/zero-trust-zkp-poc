@@ -1,6 +1,7 @@
 package de.schulzebilk.zkp.pdp.model;
 
 import de.schulzebilk.zkp.core.auth.SessionState;
+import de.schulzebilk.zkp.core.model.Signature;
 
 import java.math.BigInteger;
 import java.time.LocalDateTime;
@@ -19,6 +20,8 @@ public class Session {
     private final int threshold;
     private final BigInteger proverKey;
     private final BigInteger publicMod;
+
+    private Signature signature;
 
     public Session(String proverId, String target, int threshold, BigInteger proverKey, BigInteger publicMod) {
         this.sessionId = UUID.randomUUID().toString();
@@ -42,6 +45,10 @@ public class Session {
     public void startNewRound() {
         rounds.add(new FiatShamirRound());
         state = SessionState.WAITING_FOR_COMMITMENT;
+    }
+
+    public void waitForSignature(){
+        state = SessionState.WAITING_FOR_SIGNATURE;
     }
 
     public void evaluateVerification() {
@@ -92,7 +99,15 @@ public class Session {
         return publicMod;
     }
 
-    public double getThreshold() {
+    public int getThreshold() {
         return threshold;
+    }
+
+    public void setSignature(Signature signature) {
+        this.signature = signature;
+    }
+
+    public Signature getSignature() {
+        return signature;
     }
 }

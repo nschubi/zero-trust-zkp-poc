@@ -2,6 +2,8 @@ package de.schulzebilk.zkp.pdp.controller;
 
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
 import de.schulzebilk.zkp.core.dto.InitialAuthenticationDTO;
+import de.schulzebilk.zkp.core.dto.SignatureAuthDTO;
+import de.schulzebilk.zkp.core.model.Signature;
 import de.schulzebilk.zkp.core.dto.UserDTO;
 import de.schulzebilk.zkp.pdp.service.FiatShamirVerifierService;
 import de.schulzebilk.zkp.pdp.service.PolicyAdministratorService;
@@ -47,6 +49,12 @@ public class PolicyDecisionController {
     @PostMapping("/authenticate")
     public ResponseEntity<AuthenticationDTO> authenticate(@RequestBody AuthenticationDTO authenticationDTO){
         AuthenticationDTO response = policyAdministratorService.handleAuthentication(authenticationDTO);
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/signature")
+    public ResponseEntity<AuthenticationDTO> authenticate(@RequestBody SignatureAuthDTO signatureAuthDTO){
+        AuthenticationDTO response = policyAdministratorService.handleAuthentication(signatureAuthDTO);
         return ResponseEntity.ok(response);
     }
 

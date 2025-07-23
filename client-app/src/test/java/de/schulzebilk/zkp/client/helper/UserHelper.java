@@ -12,4 +12,8 @@ public class UserHelper {
     public static User getPasswordUser() {
         return new User("charlie", "secretpass333", AuthType.PASSWORD);
     }
+
+    public static User getSignatureUser() {
+        return new User("dave", "mysecretpassword", AuthType.SIGNATURE);
+    }
 }

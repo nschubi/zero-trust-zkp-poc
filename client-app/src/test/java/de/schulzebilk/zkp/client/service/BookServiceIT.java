@@ -1,5 +1,6 @@
 package de.schulzebilk.zkp.client.service;
 
+import de.schulzebilk.zkp.client.helper.UserHelper;
 import de.schulzebilk.zkp.core.auth.AuthType;
 import de.schulzebilk.zkp.core.model.Book;
 import de.schulzebilk.zkp.core.model.User;
@@ -21,6 +22,17 @@ public class BookServiceIT {
         String proverId = "alice";
         String proverKey = "password123";
         User user = new User(proverId, proverKey, AuthType.FIATSHAMIR);
+
+        Long bookId = 1L;
+        Book book = bookService.getBookById(bookId, user);
+
+        assertNotNull(book);
+        assertEquals(bookId, book.getId());
+    }
+
+    @Test
+    void testGetBookById_Signature() {
+        User user = UserHelper.getSignatureUser();
 
         Long bookId = 1L;
         Book book = bookService.getBookById(bookId, user);

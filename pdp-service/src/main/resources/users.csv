@@ -2,3 +2,4 @@ username;secret;method
 alice;password123;FIATSHAMIR
 bob;test123;FIATSHAMIR
 charlie;secretpass333;PASSWORD
+dave;mysecretpassword;SIGNATURE

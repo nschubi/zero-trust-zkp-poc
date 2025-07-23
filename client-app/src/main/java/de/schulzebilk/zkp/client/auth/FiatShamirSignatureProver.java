@@ -1,6 +1,6 @@
 package de.schulzebilk.zkp.client.auth;
 
-import de.schulzebilk.zkp.core.dto.SignatureDTO;
+import de.schulzebilk.zkp.core.model.Signature;
 import de.schulzebilk.zkp.core.model.User;
 import de.schulzebilk.zkp.core.util.MathUtils;
 import de.schulzebilk.zkp.core.util.PasswordUtils;
@@ -20,7 +20,7 @@ public class FiatShamirSignatureProver {
         this.prover = prover;
     }
 
-    public SignatureDTO generateSignature(String sessionId, User user, int rounds) {
+    public Signature generateSignature(String sessionId, User user, int rounds) {
         BigInteger[] generators = generateGenerators(rounds);
         BigInteger[] commitments = generateCommitments(generators);
 
@@ -30,10 +30,10 @@ public class FiatShamirSignatureProver {
 
         BigInteger[] responses = generateResponses(generators, user.getSecret(), challenges);
 
-        return new SignatureDTO(message, commitments, responses);
+        return new Signature(message, commitments, responses);
     }
 
-    public boolean checkSignature(SignatureDTO signature, String secret) {
+    public boolean checkSignature(Signature signature, String secret) {
         byte[] messageHash = generateHash(signature.message(), signature.commitments());
         boolean[] challenges = generateChallenges(messageHash, signature.responses().length);
 

@@ -4,6 +4,8 @@ import de.schulzebilk.zkp.core.auth.AuthType;
 import de.schulzebilk.zkp.core.auth.SessionState;
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
 import de.schulzebilk.zkp.core.dto.InitialAuthenticationDTO;
+import de.schulzebilk.zkp.core.dto.SignatureAuthDTO;
+import de.schulzebilk.zkp.core.model.Signature;
 import de.schulzebilk.zkp.core.model.User;
 import de.schulzebilk.zkp.core.util.PasswordUtils;
 import de.schulzebilk.zkp.pdp.model.Session;
@@ -48,7 +50,7 @@ public class PolicyAdministratorService {
                 String[] fields = line.split(";");
                 User user = new User(fields[0], fields[1], AuthType.valueOf(fields[2]));
                 switch (user.getAuthType()) {
-                    case FIATSHAMIR -> {
+                    case FIATSHAMIR, SIGNATURE -> {
                         if (user.getSecret() == null || user.getSecret().isEmpty()) {
                             throw new IllegalArgumentException("Secret must not be null or empty for Fiat-Shamir authentication. User: " + user.getUsername());
                         }
@@ -75,7 +77,7 @@ public class PolicyAdministratorService {
         var auth = initialAuth.authenticationDTO();
         var authType = AuthType.valueOf(auth.sessionId());
         switch(authType) {
-            case FIATSHAMIR -> {
+            case FIATSHAMIR, SIGNATURE -> {
                 if (auth.proverId() == null) {
                     throw new IllegalArgumentException("Prover ID must not be null for Fiat-Shamir authentication.");
                 }
@@ -88,8 +90,13 @@ public class PolicyAdministratorService {
                 Session newSession = fiatShamirVerifierService.createSession(auth.proverId(), initialAuth.endpoint(),
                         policyEngineService.trustAlgorithm(auth.proverId(), initialAuth.endpoint(),
                                 HttpMethod.valueOf(initialAuth.method())));
-                newSession.startNewRound();
-                return new AuthenticationDTO(newSession.getProverId(), newSession.getSessionId(), null, newSession.getState());
+                if(authType == AuthType.FIATSHAMIR) {
+                    newSession.startNewRound();
+                    return new AuthenticationDTO(newSession.getProverId(), newSession.getSessionId(), null, newSession.getState());
+                }else {
+                    newSession.waitForSignature();
+                    return new AuthenticationDTO(newSession.getProverId(), newSession.getSessionId(), newSession.getThreshold() + "", newSession.getState());
+                }
             }
             case PASSWORD ->{
                 boolean isAuthenticated = passwordService.authenticateUser(auth.proverId(),auth.payload());
@@ -144,6 +151,25 @@ public class PolicyAdministratorService {
         }
     }
 
+    public AuthenticationDTO handleAuthentication(SignatureAuthDTO signatureAuthDTO) {
+        AuthenticationDTO auth = signatureAuthDTO.authenticationDTO();
+        Signature signature = signatureAuthDTO.signature();
+
+        Session session = fiatShamirVerifierService.getSession(auth.sessionId());
+        if (session == null) {
+            throw new IllegalArgumentException("Session not found for ID: " + auth.sessionId());
+        }
+        if (!session.getProverId().equals(auth.proverId())) {
+            throw new IllegalArgumentException("Prover ID does not match session: " + auth.proverId());
+        }
+        if (session.getState() != auth.sessionState()) {
+            throw new IllegalArgumentException("Session state does not match: " + session.getState() + " vs " + auth.sessionState());
+        }
+        session.setSignature(signature);
+        fiatShamirVerifierService.checkSignature(session);
+        return new AuthenticationDTO(session.getProverId(), session.getSessionId(), null, session.getState());
+    }
+
     public void registerUser(String userId, String secret, AuthType authType) {
         if (userId == null || userId.isEmpty() || secret == null || secret.isEmpty()) {
             throw new IllegalArgumentException("User ID and secret must not be null or empty. User ID: " + userId);
@@ -152,7 +178,7 @@ public class PolicyAdministratorService {
             throw new IllegalArgumentException("Authentication type must not be null.");
         }
         switch (authType) {
-            case FIATSHAMIR -> {
+            case FIATSHAMIR, SIGNATURE -> {
                 fiatShamirVerifierService.registerProver(userId, new BigInteger(secret));
             }
             case PASSWORD -> {

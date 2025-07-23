@@ -1,8 +1,12 @@
 package de.schulzebilk.zkp.client.rest;
 
 import de.schulzebilk.zkp.client.auth.FiatShamirProver;
+import de.schulzebilk.zkp.client.auth.FiatShamirSignatureProver;
+import de.schulzebilk.zkp.core.auth.AuthType;
 import de.schulzebilk.zkp.core.auth.SessionState;
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
+import de.schulzebilk.zkp.core.dto.SignatureAuthDTO;
+import de.schulzebilk.zkp.core.model.Signature;
 import de.schulzebilk.zkp.core.model.User;
 import de.schulzebilk.zkp.core.util.AuthUtils;
 import de.schulzebilk.zkp.core.util.PasswordUtils;
@@ -14,10 +18,13 @@ import org.springframework.stereotype.Component;
 public class PepEntityClient<T> extends PepClient {
 
     private final FiatShamirProver prover;
+    private final FiatShamirSignatureProver signatureProver;
+
 
     @Autowired
-    public PepEntityClient(FiatShamirProver prover) {
+    public PepEntityClient(FiatShamirProver prover, FiatShamirSignatureProver signatureProver) {
         this.prover = prover;
+        this.signatureProver = signatureProver;
     }
 
 
@@ -33,13 +40,21 @@ public class PepEntityClient<T> extends PepClient {
 
         if (response.getHeaders().containsKey("auth-state")) {
             AuthenticationDTO authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
-            while (authenticate.sessionState() != SessionState.VERIFIED
-                    && authenticate.sessionState() != SessionState.FAILED) {
-                authenticate = prover.handleAuthentication(user, authenticate);
-                response = sendAuthentication(authenticate, clazz);
+            if(user.getAuthType().equals(AuthType.SIGNATURE)){
+                int rounds = Integer.parseInt(authenticate.payload());
+                Signature signature = signatureProver.generateSignature(authenticate.sessionId(), user, rounds);
+                authenticate = new AuthenticationDTO(authenticate.proverId(), authenticate.sessionId(), "", authenticate.sessionState());
+                response = sendAuthentication(authenticate, signature, clazz);
                 authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
             }
-
+            else {
+                while (authenticate.sessionState() != SessionState.VERIFIED
+                        && authenticate.sessionState() != SessionState.FAILED) {
+                    authenticate = prover.handleAuthentication(user, authenticate);
+                    response = sendAuthentication(authenticate, clazz);
+                    authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
+                }
+            }
             if (response.getStatusCode().is2xxSuccessful() && authenticate.sessionState() == SessionState.VERIFIED) {
                 return (T) response.getBody();
             } else {
@@ -82,9 +97,17 @@ public class PepEntityClient<T> extends PepClient {
                 .toEntity(clazz);
     }
 
+    private ResponseEntity<?> sendAuthentication(AuthenticationDTO authenticationDTO, Signature signature, Class<T> clazz) {
+        SignatureAuthDTO signatureAuthDTO = new SignatureAuthDTO(authenticationDTO, signature);
+        return restClient.post().uri("/api/signature")
+                .body(signatureAuthDTO)
+                .retrieve()
+                .toEntity(clazz);
+    }
+
     private String getSecretForUser(User user) {
         switch (user.getAuthType()) {
-            case FIATSHAMIR -> {
+            case FIATSHAMIR, SIGNATURE -> {
                 return "";
             }
             case PASSWORD -> {

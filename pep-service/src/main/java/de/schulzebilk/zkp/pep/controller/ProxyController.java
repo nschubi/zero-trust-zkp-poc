@@ -3,6 +3,8 @@ package de.schulzebilk.zkp.pep.controller;
 import de.schulzebilk.zkp.core.auth.SessionState;
 import de.schulzebilk.zkp.core.dto.AuthenticationDTO;
 import de.schulzebilk.zkp.core.dto.InitialAuthenticationDTO;
+import de.schulzebilk.zkp.core.dto.SignatureAuthDTO;
+import de.schulzebilk.zkp.core.model.Signature;
 import de.schulzebilk.zkp.core.util.AuthUtils;
 import de.schulzebilk.zkp.pep.client.PdpWebClient;
 import jakarta.annotation.PostConstruct;
@@ -59,6 +61,16 @@ public class ProxyController {
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticate(@RequestBody AuthenticationDTO authenticationDTO) {
         AuthenticationDTO response = pdpWebClient.authenticate(authenticationDTO);
+        return handlePdpAuthenticationResponse(response);
+    }
+
+    @PostMapping("/signature")
+    public ResponseEntity<?> authenticateSignature(@RequestBody SignatureAuthDTO signatureAuthDTO) {
+        AuthenticationDTO response = pdpWebClient.authenticateSignature(signatureAuthDTO);
+        return handlePdpAuthenticationResponse(response);
+    }
+
+    private ResponseEntity<?> handlePdpAuthenticationResponse(AuthenticationDTO response) {
         if (response.sessionState() == SessionState.VERIFIED) {
             CachedRequest cachedRequest = sessionCache.get(response.sessionId());
 

@@ -4,4 +4,4 @@ server:
 pdp:
   policy:
     fiatShamir:
-      fixedRounds: 5
+      fixedRounds: 0

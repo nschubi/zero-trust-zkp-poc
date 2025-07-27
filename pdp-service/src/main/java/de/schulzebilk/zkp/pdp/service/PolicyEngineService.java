@@ -3,6 +3,7 @@ package de.schulzebilk.zkp.pdp.service;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +19,9 @@ public class PolicyEngineService {
 
     private final int GET_FACTOR = 1;
     private final int POST_FACTOR = 2;
+
+    @Value("${pdp.policy.fiatShamir.fixedRounds}")
+    private int FIXED_ROUNDS;
 
     private final Map<String, Integer> endpointMap = new HashMap<>();
 
@@ -59,6 +63,10 @@ public class PolicyEngineService {
             return -1;
         }
 
+        if (FIXED_ROUNDS > 0) {
+            LOG.info("Using fixed rounds: {}", FIXED_ROUNDS);
+            return FIXED_ROUNDS;
+        }
         return endpointMap.get(endpoint) * (httpMethod == HttpMethod.GET ? GET_FACTOR : POST_FACTOR);
     }
 }

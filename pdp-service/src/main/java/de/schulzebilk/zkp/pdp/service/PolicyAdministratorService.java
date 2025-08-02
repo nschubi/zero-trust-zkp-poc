@@ -8,6 +8,8 @@ import de.schulzebilk.zkp.core.dto.SignatureAuthDTO;
 import de.schulzebilk.zkp.core.model.Signature;
 import de.schulzebilk.zkp.core.model.User;
 import de.schulzebilk.zkp.core.util.PasswordUtils;
+import de.schulzebilk.zkp.pdp.model.FiatShamirSession;
+import de.schulzebilk.zkp.pdp.model.PasswordSession;
 import de.schulzebilk.zkp.pdp.model.Session;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -76,34 +78,31 @@ public class PolicyAdministratorService {
     public AuthenticationDTO initiateAuthentication(InitialAuthenticationDTO initialAuth) {
         var auth = initialAuth.authenticationDTO();
         var authType = AuthType.valueOf(auth.sessionId());
-        switch(authType) {
+        switch (authType) {
             case FIATSHAMIR, SIGNATURE -> {
                 if (auth.proverId() == null) {
                     throw new IllegalArgumentException("Prover ID must not be null for Fiat-Shamir authentication.");
                 }
                 if (auth.sessionId() != null) {
-                    Session existingSession = fiatShamirVerifierService.getSession(auth.sessionId());
+                    FiatShamirSession existingSession = fiatShamirVerifierService.getSession(auth.sessionId());
                     if (existingSession != null) {
                         throw new IllegalArgumentException("Session ID already exists: " + auth.sessionId());
                     }
                 }
-                Session newSession = fiatShamirVerifierService.createSession(auth.proverId(), initialAuth.endpoint(),
+                FiatShamirSession newSession = fiatShamirVerifierService.createSession(auth.proverId(), initialAuth.endpoint(),
                         policyEngineService.trustAlgorithm(auth.proverId(), initialAuth.endpoint(),
                                 HttpMethod.valueOf(initialAuth.method())));
-                if(authType == AuthType.FIATSHAMIR) {
+                if (authType == AuthType.FIATSHAMIR) {
                     newSession.startNewRound();
                     return new AuthenticationDTO(newSession.getProverId(), newSession.getSessionId(), null, newSession.getState());
-                }else {
+                } else {
                     newSession.waitForSignature();
                     return new AuthenticationDTO(newSession.getProverId(), newSession.getSessionId(), newSession.getThreshold() + "", newSession.getState());
                 }
             }
-            case PASSWORD ->{
-                boolean isAuthenticated = passwordService.authenticateUser(auth.proverId(),auth.payload());
-                if (!isAuthenticated) {
-                    throw new IllegalArgumentException("Authentication failed for user: " + auth.proverId());
-                }
-                return new AuthenticationDTO(auth.proverId(), null, null, SessionState.VERIFIED);
+            case PASSWORD -> {
+                PasswordSession passwordSession = passwordService.createSession(auth.proverId());
+                return new AuthenticationDTO(auth.proverId(), passwordSession.getSessionId(), null, passwordSession.getState());
             }
 
             default -> {
@@ -113,41 +112,49 @@ public class PolicyAdministratorService {
 
     }
 
-
     public AuthenticationDTO handleAuthentication(AuthenticationDTO auth) {
-        Session session = fiatShamirVerifierService.getSession(auth.sessionId());
+        Session session = getSessionById(auth.sessionId());
         if (session == null) {
             throw new IllegalArgumentException("Session not found for ID: " + auth.sessionId());
         }
-        if (!session.getProverId().equals(auth.proverId())) {
-            throw new IllegalArgumentException("Prover ID does not match session: " + auth.proverId());
+        if (!session.getUserId().equals(auth.proverId())) {
+            throw new IllegalArgumentException("User ID does not match session: " + auth.proverId());
         }
         if (session.getState() != auth.sessionState()) {
             throw new IllegalArgumentException("Session state does not match: " + session.getState() + " vs " + auth.sessionState());
         }
-        switch (auth.sessionState()) {
-            case WAITING_FOR_COMMITMENT -> {
-                if (auth.payload() == null) {
-                    throw new IllegalArgumentException("Payload must not be null for commitment.");
-                }
-                BigInteger commitment = PasswordUtils.convertToBigInteger(auth.payload());
-                boolean challenge = fiatShamirVerifierService.generateChallenge(session.getSessionId(), commitment);
-                return new AuthenticationDTO(session.getProverId(), session.getSessionId(), challenge ? "true" : "false", session.getState());
-            }
-            case WAITING_FOR_RESPONSE -> {
-                if (auth.payload() == null) {
-                    throw new IllegalArgumentException("Payload must not be null for response.");
-                }
-                BigInteger response = PasswordUtils.convertToBigInteger(auth.payload());
-                fiatShamirVerifierService.verifyResponse(session.getSessionId(), response);
-                if (session.getState() == SessionState.COMPLETED) {
-                    session.startNewRound();
-                }
-                return new AuthenticationDTO(session.getProverId(), session.getSessionId(), null, session.getState());
-            }
-            default -> {
+        if (session instanceof PasswordSession passwordSession) {
+            if (auth.sessionState() == SessionState.WAITING_FOR_PASSWORD) {
+                passwordService.authenticateUser(auth.sessionId(), auth.payload());
+                return new AuthenticationDTO(passwordSession.getUserId(), passwordSession.getSessionId(), null, passwordSession.getState());
+            }else{
                 throw new IllegalArgumentException("Invalid session state: " + auth.sessionState());
             }
+        } else if (session instanceof FiatShamirSession fiatShamirSession) {
+            switch (auth.sessionState()) {
+                case WAITING_FOR_COMMITMENT -> {
+                    if (auth.payload() == null) {
+                        throw new IllegalArgumentException("Payload must not be null for commitment.");
+                    }
+                    BigInteger commitment = PasswordUtils.convertToBigInteger(auth.payload());
+                    boolean challenge = fiatShamirVerifierService.generateChallenge(fiatShamirSession.getSessionId(), commitment);
+                    return new AuthenticationDTO(fiatShamirSession.getProverId(), fiatShamirSession.getSessionId(), challenge ? "true" : "false", fiatShamirSession.getState());
+                }
+                case WAITING_FOR_RESPONSE -> {
+                    if (auth.payload() == null) {
+                        throw new IllegalArgumentException("Payload must not be null for response.");
+                    }
+                    BigInteger response = PasswordUtils.convertToBigInteger(auth.payload());
+                    fiatShamirVerifierService.verifyResponse(session.getSessionId(), response);
+                    if (fiatShamirSession.getState() == SessionState.COMPLETED) {
+                        fiatShamirSession.startNewRound();
+                    }
+                    return new AuthenticationDTO(fiatShamirSession.getProverId(), fiatShamirSession.getSessionId(), null, fiatShamirSession.getState());
+                }
+                default -> throw new IllegalArgumentException("Invalid session state: " + auth.sessionState());
+            }
+        } else {
+            throw new IllegalArgumentException("Unknown session type: " + session.getClass().getName());
         }
     }
 
@@ -155,7 +162,7 @@ public class PolicyAdministratorService {
         AuthenticationDTO auth = signatureAuthDTO.authenticationDTO();
         Signature signature = signatureAuthDTO.signature();
 
-        Session session = fiatShamirVerifierService.getSession(auth.sessionId());
+        FiatShamirSession session = fiatShamirVerifierService.getSession(auth.sessionId());
         if (session == null) {
             throw new IllegalArgumentException("Session not found for ID: " + auth.sessionId());
         }
@@ -192,5 +199,13 @@ public class PolicyAdministratorService {
 
     public BigInteger getPublicMod() {
         return fiatShamirVerifierService.getPublicMod();
+    }
+
+    private Session getSessionById(String sessionId) {
+        FiatShamirSession fiatShamirSession = fiatShamirVerifierService.getSession(sessionId);
+        if (fiatShamirSession != null) {
+            return fiatShamirSession;
+        }
+        return passwordService.getSession(sessionId);
     }
 }

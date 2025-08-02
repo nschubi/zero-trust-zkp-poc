@@ -18,10 +18,8 @@ public class BookServiceIT {
     private BookService bookService;
 
     @Test
-    void testGetBookById() {
-        String proverId = "alice";
-        String proverKey = "password123";
-        User user = new User(proverId, proverKey, AuthType.FIATSHAMIR);
+    void testGetBookById_FiatShamir() {
+        User user = UserHelper.getFiatShamirUser();
 
         Long bookId = 1L;
         Book book = bookService.getBookById(bookId, user);
@@ -33,6 +31,17 @@ public class BookServiceIT {
     @Test
     void testGetBookById_Signature() {
         User user = UserHelper.getSignatureUser();
+
+        Long bookId = 1L;
+        Book book = bookService.getBookById(bookId, user);
+
+        assertNotNull(book);
+        assertEquals(bookId, book.getId());
+    }
+
+    @Test
+    void testGetBookById_Password() {
+        User user = UserHelper.getPasswordUser();
 
         Long bookId = 1L;
         Book book = bookService.getBookById(bookId, user);

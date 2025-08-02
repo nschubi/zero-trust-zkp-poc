@@ -8,11 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import de.schulzebilk.zkp.pdp.model.FiatShamirRound;
-import de.schulzebilk.zkp.pdp.model.Session;
+import de.schulzebilk.zkp.pdp.model.FiatShamirSession;
 
 import java.math.BigInteger;
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,8 +20,8 @@ public class FiatShamirVerifierService {
 
     private final static Logger LOG = LoggerFactory.getLogger(FiatShamirVerifierService.class);
 
-    private final Map<String, Session> activeSessions;
-    private final Map<String, Session> sessionsByProver;
+    private final Map<String, FiatShamirSession> activeSessions;
+    private final Map<String, FiatShamirSession> sessionsByProver;
     private final Map<String, BigInteger> proverKeys;
     private final BigInteger publicMod;
 
@@ -53,11 +52,11 @@ public class FiatShamirVerifierService {
         proverKeys.put(proverId, proverKey);
     }
 
-    public Session createSession(String proverId, String target, int threshold) {
+    public FiatShamirSession createSession(String proverId, String target, int threshold) {
         if (!proverKeys.containsKey(proverId)) {
             throw new IllegalArgumentException("Prover with ID " + proverId + " is not registered.");
         }
-        Session session = new Session(proverId, target, threshold, proverKeys.get(proverId), publicMod);
+        FiatShamirSession session = new FiatShamirSession(proverId, target, threshold, proverKeys.get(proverId), publicMod);
 
         activeSessions.put(session.getSessionId(), session);
         sessionsByProver.put(proverId, session);
@@ -67,7 +66,7 @@ public class FiatShamirVerifierService {
 
 
     public boolean generateChallenge(String sessionId, BigInteger commitment) {
-        Session session = activeSessions.get(sessionId);
+        FiatShamirSession session = activeSessions.get(sessionId);
         if (session == null || session.getCurrentRound() == null) {
             throw new IllegalStateException("No active session found or no current round available for this session. Session ID: " + sessionId);
         }
@@ -84,7 +83,7 @@ public class FiatShamirVerifierService {
     }
 
     public boolean verifyResponse(String sessionId, BigInteger response) {
-        Session session = activeSessions.get(sessionId);
+        FiatShamirSession session = activeSessions.get(sessionId);
         if (session == null) {
             return false;
         }
@@ -105,7 +104,7 @@ public class FiatShamirVerifierService {
         return isValid;
     }
 
-    private boolean performVerification(Session session, FiatShamirRound round) {
+    private boolean performVerification(FiatShamirSession session, FiatShamirRound round) {
         BigInteger res = round.getResponse().pow(2).mod(session.getPublicMod());
         if (round.isChallenge()) {
             BigInteger reserg = round.getCommitment().multiply(session.getProverKey()).mod(session.getPublicMod());
@@ -115,29 +114,27 @@ public class FiatShamirVerifierService {
         }
     }
 
-    public boolean checkSignature(Session session) {
+    public void checkSignature(FiatShamirSession session) {
         Signature signature = session.getSignature();
         byte[] messageHash = generateHash(signature.message(), signature.commitments());
         boolean[] challenges = generateChallenges(messageHash, signature.responses().length);
 
-        boolean isValid = false;
         for (int i = 0; i < signature.responses().length; i++) {
             BigInteger res = signature.responses()[i].pow(2).mod(session.getPublicMod());
             if (challenges[i]) {
                 BigInteger reserg = signature.commitments()[i].multiply(session.getProverKey()).mod(session.getPublicMod());
                 if (!res.equals(reserg)) {
                     session.setState(SessionState.FAILED);
-                    return isValid;
+                    return;
                 }
             } else {
                 if (!res.equals(signature.commitments()[i])) {
                     session.setState(SessionState.FAILED);
-                    return isValid;
+                    return;
                 }
             }
         }
         session.setState(SessionState.VERIFIED);
-        return true;
     }
 
     private byte[] generateHash(String message, BigInteger[] commitments) {
@@ -171,11 +168,11 @@ public class FiatShamirVerifierService {
         return challenges;
     }
 
-    public Session getSession(String sessionId) {
+    public FiatShamirSession getSession(String sessionId) {
         return activeSessions.get(sessionId);
     }
 
-    public Session getSessionByProver(String proverId) {
+    public FiatShamirSession getSessionByProver(String proverId) {
         return sessionsByProver.get(proverId);
     }
 

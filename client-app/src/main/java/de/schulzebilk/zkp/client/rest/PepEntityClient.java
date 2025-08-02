@@ -28,69 +28,50 @@ public class PepEntityClient<T> extends PepClient {
     }
 
 
-    @SuppressWarnings("unchecked")
     public T getSingleEntityByUri(String uri, User user, Class<T> clazz) {
         ResponseEntity<?> response = restClient.get()
                 .uri(uri)
                 .header("auth-user", user.getUsername())
-                .header("auth-payload", getSecretForUser(user))
                 .header("auth-session", user.getAuthType().toString())
                 .retrieve()
                 .toEntity(clazz);
 
-        if (response.getHeaders().containsKey("auth-state")) {
-            AuthenticationDTO authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
-            if(user.getAuthType().equals(AuthType.SIGNATURE)){
-                int rounds = Integer.parseInt(authenticate.payload());
-                Signature signature = signatureProver.generateSignature(authenticate.sessionId(), user, rounds);
-                authenticate = new AuthenticationDTO(authenticate.proverId(), authenticate.sessionId(), "", authenticate.sessionState());
-                response = sendAuthentication(authenticate, signature, clazz);
-                authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
-            }
-            else {
-                while (authenticate.sessionState() != SessionState.VERIFIED
-                        && authenticate.sessionState() != SessionState.FAILED) {
-                    authenticate = prover.handleAuthentication(user, authenticate);
-                    response = sendAuthentication(authenticate, clazz);
-                    authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
-                }
-            }
-            if (response.getStatusCode().is2xxSuccessful() && authenticate.sessionState() == SessionState.VERIFIED) {
-                return (T) response.getBody();
-            } else {
-                throw new RuntimeException("Failed to retrieve entity from URI: " + uri);
-            }
-
-        }
-        return (T) response.getBody();
+        return handleAuthentication(uri, user, clazz, response);
     }
 
     public T createEntity(String uri, T entity, User user, Class<T> clazz) {
         ResponseEntity<?> response = restClient.post()
                 .uri(uri)
                 .header("auth-user", user.getUsername())
-                .header("auth-payload", getSecretForUser(user))
                 .header("auth-session", user.getAuthType().toString())
                 .body(entity)
                 .retrieve()
                 .toEntity(clazz);
 
+        return handleAuthentication(uri, user, clazz, response);
+    }
+
+    @SuppressWarnings("unchecked")
+    private T handleAuthentication(String uri, User user, Class<T> clazz, ResponseEntity<?> response) {
         if (response.getHeaders().containsKey("auth-state")) {
             AuthenticationDTO authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
-            if(user.getAuthType().equals(AuthType.SIGNATURE)){
+            if (user.getAuthType().equals(AuthType.SIGNATURE)) {
                 int rounds = Integer.parseInt(authenticate.payload());
                 Signature signature = signatureProver.generateSignature(authenticate.sessionId(), user, rounds);
                 authenticate = new AuthenticationDTO(authenticate.proverId(), authenticate.sessionId(), "", authenticate.sessionState());
                 response = sendAuthentication(authenticate, signature, clazz);
                 authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
-            }
-            else {
+            } else if (user.getAuthType().equals(AuthType.FIATSHAMIR)) {
                 while (authenticate.sessionState() != SessionState.VERIFIED
                         && authenticate.sessionState() != SessionState.FAILED) {
                     authenticate = prover.handleAuthentication(user, authenticate);
                     response = sendAuthentication(authenticate, clazz);
                     authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
                 }
+            } else {
+                authenticate = new AuthenticationDTO(authenticate.proverId(), authenticate.sessionId(), PasswordUtils.calcualtePasswordHash(user.getSecret()), authenticate.sessionState());
+                response = sendAuthentication(authenticate, clazz);
+                authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
             }
             if (response.getStatusCode().is2xxSuccessful() && authenticate.sessionState() == SessionState.VERIFIED) {
                 return (T) response.getBody();
@@ -100,19 +81,6 @@ public class PepEntityClient<T> extends PepClient {
 
         }
         return (T) response.getBody();
-//        AuthenticationDTO authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
-//        while (authenticate.sessionState() != SessionState.VERIFIED
-//                && authenticate.sessionState() != SessionState.FAILED) {
-//            authenticate = prover.handleAuthentication(user, authenticate);
-//            response = sendAuthentication(authenticate, clazz);
-//            authenticate = AuthUtils.createAuthenticationDtoFromHeaders(response.getHeaders());
-//        }
-//
-//        if (response.getStatusCode().is2xxSuccessful() && authenticate.sessionState() == SessionState.VERIFIED) {
-//            return (T) response.getBody();
-//        } else {
-//            throw new RuntimeException("Failed to retrieve entity from URI: " + uri);
-//        }
     }
 
     private ResponseEntity<?> sendAuthentication(AuthenticationDTO authenticationDTO, Class<T> clazz) {
@@ -130,17 +98,4 @@ public class PepEntityClient<T> extends PepClient {
                 .toEntity(clazz);
     }
 
-    private String getSecretForUser(User user) {
-        switch (user.getAuthType()) {
-            case FIATSHAMIR, SIGNATURE -> {
-                return "";
-            }
-            case PASSWORD -> {
-                return PasswordUtils.calcualtePasswordHash(user.getSecret());
-            }
-            default -> {
-                throw new IllegalArgumentException("Unknown authentication type: " + user.getAuthType());
-            }
-        }
-    }
 }
